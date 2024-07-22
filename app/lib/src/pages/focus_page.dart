@@ -40,7 +40,7 @@ class _FocusPageState extends State<FocusPage> {
     });
   }
 
-  Future<void> _checkActiveSession() async {
+  Future<bool> _checkActiveSession() async {
     var activeSession = await ApiService.checkActiveSession(_userId);
     if (activeSession != null) {
       // ensure elapsed time is always correct
@@ -62,15 +62,24 @@ class _FocusPageState extends State<FocusPage> {
           });
         });
       }
+      return true;
     } else {
       setState(() {
         _isRunning = false;
         _elapsedTime = 0;
       });
+      return false;
     }
   }
 
   Future<void> _resetTimer() async {
+    var runningOnOtherDevice = await _checkActiveSession();
+    if (!runningOnOtherDevice) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Session already cancelled")),
+      );
+      return;
+    }
     setState(() {
       _isRunning = false;
       _endTime = currentTime();
@@ -78,9 +87,6 @@ class _FocusPageState extends State<FocusPage> {
     });
     var activeSession = await ApiService.checkActiveSession(_userId);
     if (activeSession != null) {
-      var startedAt = DateTime.parse(activeSession.startedAt);
-      var duration = _endTime.difference(startedAt).inSeconds;
-      print("duration: $duration");
       var session = Session(
           sessionId: _sessionId,
           startedAt: _startTime.toString(),
@@ -88,14 +94,25 @@ class _FocusPageState extends State<FocusPage> {
       try {
         await ApiService.updateSession(_userId, session);
       } catch (e) {
-        print(e);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to update session")),
+        );
       }
     } else {
-      print("Failed to find active session for $_userId");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to find active session")),
+      );
     }
   }
 
   Future<void> _startTimer() async {
+    var runningOnOtherDevice = await _checkActiveSession();
+    if (runningOnOtherDevice) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Session already running")),
+      );
+      return;
+    }
     setState(() {
       _elapsedTime = 0;
       _isRunning = true;
@@ -108,7 +125,9 @@ class _FocusPageState extends State<FocusPage> {
     try {
       await ApiService.addSession(_userId, session);
     } catch (e) {
-      print(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to add session")),
+      );
     }
     Timer.periodic(const Duration(milliseconds: 500), (timer) {
       if (!_isRunning) {
