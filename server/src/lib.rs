@@ -25,6 +25,8 @@ struct Session {
     started_at: String,
     #[serde(rename = "endedAt")]
     ended_at: Option<String>,
+    #[serde(rename = "duration")]
+    duration: Option<String>,
 }
 
 async fn health_check() -> impl Responder {
@@ -78,6 +80,7 @@ async fn update_session(user_id: web::Path<String>, json: web::Json<Session>) ->
                 match session {
                     Some(session) => {
                         session.ended_at = json.ended_at;
+                        session.duration = json.duration;
                     }
                     None => {
                         return HttpResponse::NotFound();
@@ -153,6 +156,29 @@ async fn delete_user(user_id: web::Path<String>) -> impl Responder {
     HttpResponse::Ok()
 }
 
+async fn get_todays_sessions(user_id: web::Path<String>) -> impl Responder {
+    let users = USERS.lock().await;
+    let user = users.iter().find(|user| user.user_id == user_id.clone());
+    match user {
+        Some(user) => match &user.sessions {
+            Some(sessions) => {
+                let today = chrono::offset::Utc::now().date_naive();
+                let today_str = today.format("%Y-%m-%d").to_string();
+                let sessions = sessions
+                    .iter()
+                    .filter(|session| session.started_at.starts_with(&today_str))
+                    .collect::<Vec<&Session>>();
+                if sessions.is_empty() {
+                    return HttpResponse::NotFound().finish();
+                }
+                HttpResponse::Ok().json(sessions)
+            }
+            None => HttpResponse::NotFound().finish(),
+        },
+        None => HttpResponse::NotFound().finish(),
+    }
+}
+
 pub fn run(listener: TcpListener) -> Result<Server, std::io::Error> {
     let server = HttpServer::new(|| {
         App::new()
@@ -168,6 +194,10 @@ pub fn run(listener: TcpListener) -> Result<Server, std::io::Error> {
             )
             .route("/delete_user/{user_id}", web::delete().to(delete_user))
             .route("/get_sessions/{user_id}", web::get().to(get_sessions))
+            .route(
+                "/get_todays_sessions/{user_id}",
+                web::get().to(get_todays_sessions),
+            )
             .wrap(
                 Cors::default()
                     .allow_any_origin()

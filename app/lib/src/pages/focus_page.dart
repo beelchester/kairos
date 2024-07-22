@@ -20,6 +20,7 @@ class _FocusPageState extends State<FocusPage> {
   DateTime _startTime = currentTime();
   DateTime _endTime = currentTime();
   String _sessionId = '0';
+  String _todaysFocus = formatSeconds(0);
   static const String _userId = 'user1';
 
   void _toggleMode() {
@@ -34,10 +35,21 @@ class _FocusPageState extends State<FocusPage> {
   @override
   void initState() {
     super.initState();
+    _checkTodaysFocus();
     _checkActiveSession();
     Timer.periodic(const Duration(seconds: 10), (timer) async {
       await _checkActiveSession();
+      await _checkTodaysFocus();
     });
+  }
+
+  Future<void> _checkTodaysFocus() async {
+    if (!_isRunning) {
+      var total = await ApiService.getTodaysFocusTime(_userId);
+      setState(() {
+        _todaysFocus = total;
+      });
+    }
   }
 
   Future<bool> _checkActiveSession() async {
@@ -87,10 +99,12 @@ class _FocusPageState extends State<FocusPage> {
     });
     var activeSession = await ApiService.checkActiveSession(_userId);
     if (activeSession != null) {
+      var duration = _endTime.difference(_startTime).inSeconds;
       var session = Session(
           sessionId: _sessionId,
           startedAt: _startTime.toString(),
-          endedAt: _endTime.toString());
+          endedAt: _endTime.toString(),
+          duration: duration.toString());
       try {
         await ApiService.updateSession(_userId, session);
       } catch (e) {
@@ -103,6 +117,7 @@ class _FocusPageState extends State<FocusPage> {
         const SnackBar(content: Text("Failed to find active session")),
       );
     }
+    _checkTodaysFocus();
   }
 
   Future<void> _startTimer() async {
@@ -176,6 +191,14 @@ class _FocusPageState extends State<FocusPage> {
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Text(
+                    _todaysFocus,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
                   Text(
                     formatTime(_elapsedTime),
                     style: const TextStyle(

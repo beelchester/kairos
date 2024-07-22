@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:kairos/src/utils.dart';
 import 'models/user.dart';
 import 'models/session.dart';
 
@@ -77,6 +78,24 @@ class ApiService {
 
     if (response.statusCode != 200) {
       throw Exception('Failed to delete user');
+    }
+  }
+
+  static Future<String> getTodaysFocusTime(String userId) async {
+    final url = Uri.parse('$baseUrl/get_todays_sessions/$userId');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      var sessions = (jsonDecode(response.body) as List<dynamic>)
+          .map((e) => Session.fromJson(e))
+          .toList();
+      var total = sessions.fold(
+          0, (prev, element) => prev + int.parse(element.duration!));
+      return formatSeconds(total);
+    } else if (response.statusCode == 404) {
+      return formatSeconds(0);
+    } else {
+      throw Exception('Failed to get todays sessions');
     }
   }
 }
