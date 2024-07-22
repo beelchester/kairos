@@ -45,14 +45,13 @@ class _FocusPageState extends State<FocusPage> {
     if (activeSession != null) {
       // ensure elapsed time is always correct
       setState(() {
+        _sessionId = activeSession.sessionId;
+        _startTime = DateTime.parse(activeSession.startedAt);
         _elapsedTime = (DateTime.now().difference(_startTime).inSeconds) * 2;
       });
       if (!_isRunning) {
         setState(() {
-          _sessionId = activeSession.sessionId;
-          _startTime = DateTime.parse(activeSession.startedAt);
           _isRunning = true;
-          _elapsedTime = (DateTime.now().difference(_startTime).inSeconds) * 2;
         });
         Timer.periodic(const Duration(milliseconds: 500), (timer) {
           if (!_isRunning) {
