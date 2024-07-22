@@ -43,6 +43,10 @@ class _FocusPageState extends State<FocusPage> {
   Future<void> _checkActiveSession() async {
     var activeSession = await ApiService.checkActiveSession(_userId);
     if (activeSession != null) {
+      // ensure elapsed time is always correct
+      setState(() {
+        _elapsedTime = (DateTime.now().difference(_startTime).inSeconds) * 2;
+      });
       if (!_isRunning) {
         setState(() {
           _sessionId = activeSession.sessionId;
