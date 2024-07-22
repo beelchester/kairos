@@ -31,6 +31,42 @@ class _FocusPageState extends State<FocusPage> {
     }
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _checkActiveSession();
+    Timer.periodic(const Duration(seconds: 10), (timer) async {
+      await _checkActiveSession();
+    });
+  }
+
+  Future<void> _checkActiveSession() async {
+    var activeSession = await ApiService.checkActiveSession(_userId);
+    if (activeSession != null) {
+      if (!_isRunning) {
+        setState(() {
+          _sessionId = activeSession.sessionId;
+          _startTime = DateTime.parse(activeSession.startedAt);
+          _isRunning = true;
+          _elapsedTime = (DateTime.now().difference(_startTime).inSeconds) * 2;
+        });
+        Timer.periodic(const Duration(milliseconds: 500), (timer) {
+          if (!_isRunning) {
+            timer.cancel();
+          }
+          setState(() {
+            _elapsedTime++;
+          });
+        });
+      }
+    } else {
+      setState(() {
+        _isRunning = false;
+        _elapsedTime = 0;
+      });
+    }
+  }
+
   Future<void> _resetTimer() async {
     setState(() {
       _isRunning = false;
