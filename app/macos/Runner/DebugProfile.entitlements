@@ -8,5 +8,9 @@
 	<true/>
 	<key>com.apple.security.network.server</key>
 	<true/>
+	<!-- To allow network access  -->
+	<!-- Might need to remove if planing to distribute on the app store -->
+	<key>com.apple.security.network.client</key>
+	<true/>
 </dict>
 </plist>
