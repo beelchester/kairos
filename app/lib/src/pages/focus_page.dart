@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:kairos/src/api/models/session.dart';
 import 'package:kairos/src/widgets/menu_button.dart';
 import 'package:kairos/src/utils.dart';
 import 'package:kairos/src/api/api_service.dart';
+import 'package:kairos/src/global_state.dart';
 
 class FocusPage extends StatefulWidget {
   const FocusPage({super.key});
@@ -22,6 +25,9 @@ class _FocusPageState extends State<FocusPage> {
   String _sessionId = '0';
   String _todaysFocus = formatSeconds(0);
   static const String _userId = 'user1';
+  final _globalState = GlobalState();
+  bool? _shownOffline;
+  bool? _shownOnline = false;
 
   void _toggleMode() {
     setState(() {
@@ -45,16 +51,106 @@ class _FocusPageState extends State<FocusPage> {
 
   Future<void> _checkTodaysFocus() async {
     if (!_isRunning) {
-      var total = await ApiService.getTodaysFocusTime(_userId);
-      setState(() {
-        _todaysFocus = total;
-      });
+      try {
+        var total = await ApiService.getTodaysFocusTime(_userId);
+        setState(() {
+          _todaysFocus = total;
+        });
+      } catch (e) {
+        var offlineSessions = await _globalState.getOfflineSessions();
+        if (offlineSessions != null && offlineSessions.isNotEmpty) {
+          var total = 0;
+          for (var session in offlineSessions) {
+            // if session is today
+            if (session.startedAt.substring(0, 10) ==
+                currentTime().toString().substring(0, 10)) {
+              if (session.duration != null) {
+                total += int.parse(session.duration!);
+              }
+            }
+          }
+          setState(() {
+            _todaysFocus = formatSeconds(total);
+          });
+        }
+      }
     }
   }
 
+  // NOTE: Main function used for syncing data with server, runs every 10 seconds
   Future<bool> _checkActiveSession() async {
-    var activeSession = await ApiService.checkActiveSession(_userId);
+    var offline = await _globalState.getOfflineStatus();
+    try {
+      var health = await ApiService.checkHealth();
+      if (!health) {
+        if (offline == null || !offline) {
+          if (_shownOffline == null || _shownOffline == false) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'You are offline',
+                  style: TextStyle(color: Colors.white),
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+            setState(() {
+              _shownOffline = true;
+              _shownOnline = null;
+            });
+          }
+          GlobalState().setOfflineStatus(true);
+        }
+        var session = await _globalState.getActiveSession();
+        if (session != null && !_isRunning) {
+          setState(() {
+            _sessionId = session.sessionId;
+            _startTime = DateTime.parse(session.startedAt);
+            _elapsedTime =
+                (DateTime.now().difference(_startTime).inSeconds) * 2;
+            _isRunning = true;
+          });
+          Timer.periodic(const Duration(milliseconds: 500), (timer) {
+            if (!_isRunning) {
+              timer.cancel();
+            }
+            setState(() {
+              _elapsedTime++;
+            });
+          });
+          return true;
+        }
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+    // state online
+    var isActiveSession = false;
+
+    await _globalState.setOfflineStatus(false);
+    if (offline != null && !offline && _shownOnline == null) {
+      _shownOnline = true;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'You are back online',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+    // check for online active session
+    var activeSession = await ApiService.checkOnlineActiveSession(_userId);
     if (activeSession != null) {
+      // prioritize online active session
+      // delete offline active session
+      if (offline != null && offline) {
+        _isRunning = false;
+        _elapsedTime = 0;
+      }
+      await _globalState.setActiveSession(activeSession);
       // ensure elapsed time is always correct
       setState(() {
         _sessionId = activeSession.sessionId;
@@ -74,30 +170,54 @@ class _FocusPageState extends State<FocusPage> {
           });
         });
       }
-      return true;
+      isActiveSession = true;
     } else {
-      setState(() {
-        _isRunning = false;
-        _elapsedTime = 0;
-      });
-      return false;
+      var session = await _globalState.getActiveSession();
+      if (session != null) {
+        await _globalState.setOfflineStatus(false);
+        await ApiService.addSession(_userId, session);
+        isActiveSession = true;
+      } else {
+        setState(() {
+          _isRunning = false;
+          _elapsedTime = 0;
+        });
+      }
+      isActiveSession = false;
+    }
+    _handleSync();
+    return isActiveSession;
+  }
+
+  Future<void> _handleSync() async {
+    var offlineSessions = await _globalState.getOfflineSessions();
+    if (offlineSessions != null && offlineSessions.isNotEmpty) {
+      var onlineSessions = await ApiService.getSessions(_userId);
+      // send the offline session if it is not already in onlineSessions
+      var onlineSessionsToAdd = <Session>[];
+      for (var session in offlineSessions) {
+        if (!onlineSessions
+            .any((element) => element.sessionId == session.sessionId)) {
+          onlineSessionsToAdd.add(session);
+        }
+      }
+      if (onlineSessionsToAdd.isNotEmpty) {
+        try {
+          ApiService.updateSessions(_userId, onlineSessionsToAdd);
+          await _globalState.setOfflineSessions([]);
+        } catch (e) {}
+      }
     }
   }
 
   Future<void> _resetTimer() async {
-    var runningOnOtherDevice = await _checkActiveSession();
-    if (!runningOnOtherDevice) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Session already cancelled")),
-      );
-      return;
-    }
     setState(() {
       _isRunning = false;
       _endTime = currentTime();
       _elapsedTime = 0;
     });
-    var activeSession = await ApiService.checkActiveSession(_userId);
+    var activeSession = await _globalState.getActiveSession();
+
     if (activeSession != null) {
       var duration = _endTime.difference(_startTime).inSeconds;
       var session = Session(
@@ -108,10 +228,20 @@ class _FocusPageState extends State<FocusPage> {
       try {
         await ApiService.updateSession(_userId, session);
       } catch (e) {
+        var offlineSessions = await _globalState.getOfflineSessions();
+        if (offlineSessions != null) {
+          offlineSessions.add(session);
+        } else {
+          offlineSessions = [session];
+        }
+        await _globalState.setOfflineSessions(offlineSessions);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to update session")),
+          const SnackBar(
+              content:
+                  Text("Failed to update session on server storing offline")),
         );
       }
+      await _globalState.setActiveSession(null);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Failed to find active session")),
@@ -133,17 +263,20 @@ class _FocusPageState extends State<FocusPage> {
       _isRunning = true;
       _startTime = currentTime();
       // random session id
-      _sessionId = Random().nextInt(1000000).toString();
+      _sessionId = Random().nextInt(1000000000).toString();
     });
     var session =
         Session(sessionId: _sessionId, startedAt: _startTime.toString());
     try {
       await ApiService.addSession(_userId, session);
     } catch (e) {
+      GlobalState().setOfflineStatus(true);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to add session")),
+        const SnackBar(
+            content: Text("Failed to add session on server storing offline")),
       );
     }
+    GlobalState().setActiveSession(session);
     Timer.periodic(const Duration(milliseconds: 500), (timer) {
       if (!_isRunning) {
         timer.cancel();

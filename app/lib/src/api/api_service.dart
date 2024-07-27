@@ -46,6 +46,19 @@ class ApiService {
     }
   }
 
+  static Future<void> updateSessions(
+      String userId, List<Session> sessions) async {
+    final url = Uri.parse('$baseUrl/update_sessions/$userId');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(sessions),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update sessions');
+    }
+  }
+
   static Future<User?> getUser(String userId) async {
     final url = Uri.parse('$baseUrl/get_user/$userId');
     final response = await http.get(url);
@@ -59,7 +72,37 @@ class ApiService {
     }
   }
 
-  static Future<Session?> checkActiveSession(String userId) async {
+  static Future<List<Session>> getSessions(String userId) async {
+    final url = Uri.parse('$baseUrl/get_sessions/$userId');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      return (jsonDecode(response.body) as List<dynamic>)
+          .map((e) => Session.fromJson(e))
+          .toList();
+    } else if (response.statusCode == 404) {
+      return [];
+    } else {
+      throw Exception('Failed to load sessions');
+    }
+  }
+
+  static Future<bool> checkHealth() async {
+    final url = Uri.parse('$baseUrl/health_check');
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<Session?> checkOnlineActiveSession(String userId) async {
     final url = Uri.parse('$baseUrl/check_active_session/$userId');
     final response = await http.get(url);
 

@@ -130,6 +130,32 @@ async fn get_sessions(user_id: web::Path<String>) -> impl Responder {
     }
 }
 
+async fn update_sessions(
+    user_id: web::Path<String>,
+    json: web::Json<Vec<Session>>,
+) -> impl Responder {
+    let mut users = USERS.lock().await;
+    let json = json.into_inner();
+    let user = users
+        .iter_mut()
+        .find(|user| user.user_id == user_id.clone());
+    match user {
+        Some(user) => match &mut user.sessions {
+            Some(ref mut sessions) => {
+                sessions.clear();
+                for session in json {
+                    sessions.push(session);
+                }
+            }
+            None => {
+                user.sessions = Some(json);
+            }
+        },
+        None => return HttpResponse::NotFound(),
+    }
+    HttpResponse::Ok()
+}
+
 async fn get_users() -> impl Responder {
     let users = USERS.lock().await;
     HttpResponse::Ok().json(&*users)
@@ -197,6 +223,10 @@ pub fn run(listener: TcpListener) -> Result<Server, std::io::Error> {
             .route(
                 "/get_todays_sessions/{user_id}",
                 web::get().to(get_todays_sessions),
+            )
+            .route(
+                "/update_sessions/{user_id}",
+                web::post().to(update_sessions),
             )
             .wrap(
                 Cors::default()
