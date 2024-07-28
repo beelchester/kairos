@@ -1,13 +1,12 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:kairos/src/api/models/session.dart';
-import 'package:kairos/src/widgets/menu_button.dart';
+import 'package:kairos/src/widgets/appbar.dart';
 import 'package:kairos/src/utils.dart';
 import 'package:kairos/src/api/api_service.dart';
 import 'package:kairos/src/shared_prefs.dart';
+import 'package:kairos/src/widgets/drawer.dart';
 
 class FocusPage extends StatefulWidget {
   const FocusPage({super.key});
@@ -322,33 +321,8 @@ class _FocusPageState extends State<FocusPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.deepPurple,
-      // appBar: AppBar(
-      //   backgroundColor: Colors.deepPurple,
-      //   leading: const MenuButton(),
-      //   title: _focusModeHandler(),
-      //   actions: [
-      //     Container(
-      //       decoration: BoxDecoration(
-      //         color: Colors.grey,
-      //         borderRadius: BorderRadius.circular(10),
-      //       ),
-      //       padding: const EdgeInsets.all(10),
-      //       child: const Row(
-      //         children: [
-      //           Icon(Icons.sports_score_rounded),
-      //           SizedBox(width: 5),
-      //           Text(
-      //             '1000',
-      //             style: TextStyle(
-      //               fontSize: 15,
-      //               color: Colors.black,
-      //             ),
-      //           )
-      //         ],
-      //       ),
-      //     ),
-      //   ],
-      // ),
+      drawer: const DrawerWidget(),
+      appBar: const AppBarWidget(),
       body: Center(
         child: _isFocusMode
             ? const Text("Timer")

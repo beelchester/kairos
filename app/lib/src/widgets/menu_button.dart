@@ -8,7 +8,7 @@ class MenuButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       onPressed: () {
-        showNotAvailable(context);
+        Scaffold.of(context).openDrawer();
       },
       icon: const Icon(Icons.menu),
     );
