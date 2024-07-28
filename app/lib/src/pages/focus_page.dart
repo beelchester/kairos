@@ -7,7 +7,7 @@ import 'package:kairos/src/api/models/session.dart';
 import 'package:kairos/src/widgets/menu_button.dart';
 import 'package:kairos/src/utils.dart';
 import 'package:kairos/src/api/api_service.dart';
-import 'package:kairos/src/global_state.dart';
+import 'package:kairos/src/shared_prefs.dart';
 
 class FocusPage extends StatefulWidget {
   const FocusPage({super.key});
@@ -25,7 +25,7 @@ class _FocusPageState extends State<FocusPage> {
   String _sessionId = '0';
   String _todaysFocus = formatSeconds(0);
   static const String _userId = 'user1';
-  final _globalState = GlobalState();
+  final _globalState = SharedPrefs();
   bool? _shownOffline;
   bool? _shownOnline = false;
 
@@ -99,7 +99,7 @@ class _FocusPageState extends State<FocusPage> {
               _shownOnline = null;
             });
           }
-          GlobalState().setOfflineStatus(true);
+          SharedPrefs().setOfflineStatus(true);
         }
         var session = await _globalState.getActiveSession();
         if (session != null && !_isRunning) {
@@ -144,11 +144,42 @@ class _FocusPageState extends State<FocusPage> {
     // check for online active session
     var activeSession = await ApiService.checkOnlineActiveSession(_userId);
     if (activeSession != null) {
-      // prioritize online active session
-      // delete offline active session
+      // prioritize offline active session
+      // stop online active session
       if (offline != null && offline) {
-        _isRunning = false;
-        _elapsedTime = 0;
+        var offlineActiveSession = await _globalState.getActiveSession();
+        if (offlineActiveSession != null) {}
+        if (offlineActiveSession != null &&
+            offlineActiveSession.sessionId != activeSession.sessionId) {
+          await _globalState.setActiveSession(offlineActiveSession);
+          var alreadyEndedInOffline = false;
+          // find online session in offline sessions
+          var offlineSessions = await _globalState.getOfflineSessions();
+          if (offlineSessions != null) {
+            // already ended in offline
+            for (var session in offlineSessions) {
+              if (session.sessionId == activeSession.sessionId &&
+                  session.duration != null) {
+                alreadyEndedInOffline = true;
+                activeSession.endedAt = session.endedAt;
+                activeSession.duration = session.duration;
+                await ApiService.updateSession(_userId, activeSession);
+                await ApiService.addSession(_userId, offlineActiveSession);
+                return true;
+              }
+            }
+          }
+          if (!alreadyEndedInOffline) {
+            // ending online session
+            activeSession.endedAt = currentTime().toString();
+            var duration = DateTime.now().difference(_startTime).inSeconds;
+            activeSession.duration = duration.toString();
+            await ApiService.updateSession(_userId, activeSession);
+            await ApiService.addSession(_userId, offlineActiveSession);
+            await _globalState.setOfflineStatus(false);
+            return true;
+          }
+        }
       }
       await _globalState.setActiveSession(activeSession);
       // ensure elapsed time is always correct
@@ -270,13 +301,13 @@ class _FocusPageState extends State<FocusPage> {
     try {
       await ApiService.addSession(_userId, session);
     } catch (e) {
-      GlobalState().setOfflineStatus(true);
+      SharedPrefs().setOfflineStatus(true);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text("Failed to add session on server storing offline")),
       );
     }
-    GlobalState().setActiveSession(session);
+    SharedPrefs().setActiveSession(session);
     Timer.periodic(const Duration(milliseconds: 500), (timer) {
       if (!_isRunning) {
         timer.cancel();

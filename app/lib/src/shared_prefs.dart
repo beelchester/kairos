@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'package:kairos/src/api/models/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class GlobalState {
-  static final GlobalState _instance = GlobalState._internal();
-  factory GlobalState() => _instance;
+class SharedPrefs {
+  static final SharedPrefs _instance = SharedPrefs._internal();
+  factory SharedPrefs() => _instance;
 
-  GlobalState._internal();
+  SharedPrefs._internal();
 
   Future<void> setActiveSession(Session? session) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

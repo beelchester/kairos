@@ -1,8 +1,8 @@
 class Session {
   final String sessionId;
   final String startedAt;
-  final String? endedAt;
-  final String? duration;
+  String? endedAt;
+  String? duration;
 
   Session({
     required this.sessionId,
