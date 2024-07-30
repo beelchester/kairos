@@ -204,9 +204,17 @@ class _FocusPageState extends State<FocusPage> {
     } else {
       var session = await _globalState.getActiveSession();
       if (session != null) {
+        // ensure this session is not already cancelled in online
+        var onlineSessions = await ApiService.getSessions(_userId);
         await _globalState.setOfflineStatus(false);
-        await ApiService.addSession(_userId, session);
-        isActiveSession = true;
+        if (!onlineSessions
+            .any((element) => element.sessionId == session.sessionId)) {
+          await ApiService.addSession(_userId, session);
+          isActiveSession = true;
+        } else {
+          isActiveSession = false;
+          await _globalState.setActiveSession(null);
+        }
       } else {
         setState(() {
           _isRunning = false;
