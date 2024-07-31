@@ -146,6 +146,7 @@ class _FocusPageState extends State<FocusPage> {
       // prioritize offline active session
       // stop online active session
       if (offline != null && offline) {
+        // was offline till now
         var offlineActiveSession = await _globalState.getActiveSession();
         if (offlineActiveSession != null) {}
         if (offlineActiveSession != null &&
@@ -163,23 +164,29 @@ class _FocusPageState extends State<FocusPage> {
                 activeSession.endedAt = session.endedAt;
                 activeSession.duration = session.duration;
                 await ApiService.updateSession(_userId, activeSession);
-                await ApiService.addSession(_userId, offlineActiveSession);
                 return true;
               }
             }
           }
           if (!alreadyEndedInOffline) {
-            // ending online session
+            // ending old active online session and adding new offline active session if not already present in online else update
             activeSession.endedAt = currentTime().toString();
             var duration = DateTime.now().difference(_startTime).inSeconds;
             activeSession.duration = duration.toString();
             await ApiService.updateSession(_userId, activeSession);
-            await ApiService.addSession(_userId, offlineActiveSession);
+            var onlineSessions = await ApiService.getSessions(_userId);
+            if (onlineSessions.any(
+                (element) => element.sessionId == activeSession.sessionId)) {
+              await ApiService.updateSession(_userId, offlineActiveSession);
+            } else {
+              await ApiService.addSession(_userId, offlineActiveSession);
+            }
             await _globalState.setOfflineStatus(false);
             return true;
           }
         }
       }
+      // no offline active session found
       await _globalState.setActiveSession(activeSession);
       // ensure elapsed time is always correct
       setState(() {
@@ -203,7 +210,8 @@ class _FocusPageState extends State<FocusPage> {
       isActiveSession = true;
     } else {
       var session = await _globalState.getActiveSession();
-      if (session != null) {
+      //if it was just offline check if there is an offline active session
+      if (session != null && offline != null && offline) {
         // ensure this session is not already cancelled in online
         var onlineSessions = await ApiService.getSessions(_userId);
         await _globalState.setOfflineStatus(false);
