@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:kairos/src/api/models/session.dart';
+import 'package:kairos/src/global_states.dart';
 import 'package:kairos/src/widgets/appbar.dart';
 import 'package:kairos/src/utils.dart';
 import 'package:kairos/src/api/api_service.dart';
 import 'package:kairos/src/shared_prefs.dart';
 import 'package:kairos/src/widgets/drawer.dart';
+import 'package:provider/provider.dart';
 
 class FocusPage extends StatefulWidget {
   const FocusPage({super.key});
@@ -24,9 +26,7 @@ class _FocusPageState extends State<FocusPage> {
   String _sessionId = '0';
   String _todaysFocus = formatSeconds(0);
   static const String _userId = 'user1';
-  final _globalState = SharedPrefs();
-  bool? _shownOffline;
-  bool? _shownOnline = false;
+  final _sharedPrefs = SharedPrefs();
 
   void _toggleMode() {
     setState(() {
@@ -41,9 +41,9 @@ class _FocusPageState extends State<FocusPage> {
   void initState() {
     super.initState();
     _checkTodaysFocus();
-    _checkActiveSession();
+    _checkActiveSession(context);
     Timer.periodic(const Duration(seconds: 10), (timer) async {
-      await _checkActiveSession();
+      await _checkActiveSession(context);
       await _checkTodaysFocus();
     });
   }
@@ -56,7 +56,7 @@ class _FocusPageState extends State<FocusPage> {
           _todaysFocus = total;
         });
       } catch (e) {
-        var offlineSessions = await _globalState.getOfflineSessions();
+        var offlineSessions = await _sharedPrefs.getOfflineSessions();
         if (offlineSessions != null && offlineSessions.isNotEmpty) {
           var total = 0;
           for (var session in offlineSessions) {
@@ -77,30 +77,25 @@ class _FocusPageState extends State<FocusPage> {
   }
 
   // NOTE: Main function used for syncing data with server, runs every 10 seconds
-  Future<bool> _checkActiveSession() async {
-    var offline = await _globalState.getOfflineStatus();
+  Future<bool> _checkActiveSession(BuildContext context) async {
+    var globalStates = Provider.of<GlobalStates>(context, listen: false);
+    var offline = globalStates.isOfflineState;
     try {
       var health = await ApiService.checkHealth();
       if (!health) {
-        if (offline == null || !offline) {
-          if (_shownOffline == null || _shownOffline == false) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'You are offline',
-                  style: TextStyle(color: Colors.white),
-                ),
-                backgroundColor: Colors.red,
-              ),
-            );
+        if (!offline) {
+          // was online till now
+          var shownOffline = globalStates.shownOfflineSnackBar;
+          if (!shownOffline) {
+            showOfflineSnackBar(context);
             setState(() {
-              _shownOffline = true;
-              _shownOnline = null;
+              globalStates.setShownOfflineSnackBarState = true;
+              globalStates.setShownOnlineSnackBarState = false;
             });
           }
-          SharedPrefs().setOfflineStatus(true);
+          globalStates.setOfflineState = true;
         }
-        var session = await _globalState.getActiveSession();
+        var session = await _sharedPrefs.getActiveSession();
         if (session != null && !_isRunning) {
           setState(() {
             _sessionId = session.sessionId;
@@ -127,34 +122,29 @@ class _FocusPageState extends State<FocusPage> {
     // state online
     var isActiveSession = false;
 
-    await _globalState.setOfflineStatus(false);
-    if (offline != null && !offline && _shownOnline == null) {
-      _shownOnline = true;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'You are back online',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
+    globalStates.setOfflineState = false;
+    var shownOnline = globalStates.shownOnlineSnackBar;
+    if (!offline && !shownOnline) {
+      globalStates.setShownOnlineSnackBarState = true;
+      globalStates.setShownOfflineSnackBarState = false;
+      showOnlineSnackBar(context);
     }
     // check for online active session
     var activeSession = await ApiService.checkOnlineActiveSession(_userId);
     if (activeSession != null) {
       // prioritize offline active session
       // stop online active session
-      if (offline != null && offline) {
+      if (offline) {
         // was offline till now
-        var offlineActiveSession = await _globalState.getActiveSession();
+        globalStates.setSessionsState = await ApiService.getSessions(_userId);
+        var offlineActiveSession = await _sharedPrefs.getActiveSession();
         if (offlineActiveSession != null) {}
         if (offlineActiveSession != null &&
             offlineActiveSession.sessionId != activeSession.sessionId) {
-          await _globalState.setActiveSession(offlineActiveSession);
+          await _sharedPrefs.setActiveSession(offlineActiveSession);
           var alreadyEndedInOffline = false;
           // find online session in offline sessions
-          var offlineSessions = await _globalState.getOfflineSessions();
+          var offlineSessions = await _sharedPrefs.getOfflineSessions();
           if (offlineSessions != null) {
             // already ended in offline
             for (var session in offlineSessions) {
@@ -181,13 +171,13 @@ class _FocusPageState extends State<FocusPage> {
             } else {
               await ApiService.addSession(_userId, offlineActiveSession);
             }
-            await _globalState.setOfflineStatus(false);
+            globalStates.setOfflineState = false;
             return true;
           }
         }
       }
       // no offline active session found
-      await _globalState.setActiveSession(activeSession);
+      await _sharedPrefs.setActiveSession(activeSession);
       // ensure elapsed time is always correct
       setState(() {
         _sessionId = activeSession.sessionId;
@@ -209,19 +199,20 @@ class _FocusPageState extends State<FocusPage> {
       }
       isActiveSession = true;
     } else {
-      var session = await _globalState.getActiveSession();
+      var session = await _sharedPrefs.getActiveSession();
       //if it was just offline check if there is an offline active session
-      if (session != null && offline != null && offline) {
+      if (session != null && offline) {
         // ensure this session is not already cancelled in online
         var onlineSessions = await ApiService.getSessions(_userId);
-        await _globalState.setOfflineStatus(false);
+        // await _sharedPrefs.setOfflineStatus(false);
+        globalStates.setOfflineState = false;
         if (!onlineSessions
             .any((element) => element.sessionId == session.sessionId)) {
           await ApiService.addSession(_userId, session);
           isActiveSession = true;
         } else {
           isActiveSession = false;
-          await _globalState.setActiveSession(null);
+          await _sharedPrefs.setActiveSession(null);
         }
       } else {
         setState(() {
@@ -236,21 +227,21 @@ class _FocusPageState extends State<FocusPage> {
   }
 
   Future<void> _handleSync() async {
-    var offlineSessions = await _globalState.getOfflineSessions();
+    var offlineSessions = await _sharedPrefs.getOfflineSessions();
     if (offlineSessions != null && offlineSessions.isNotEmpty) {
       var onlineSessions = await ApiService.getSessions(_userId);
       // send the offline session if it is not already in onlineSessions
-      var onlineSessionsToAdd = <Session>[];
       for (var session in offlineSessions) {
         if (!onlineSessions
             .any((element) => element.sessionId == session.sessionId)) {
-          onlineSessionsToAdd.add(session);
+          onlineSessions.add(session);
         }
       }
-      if (onlineSessionsToAdd.isNotEmpty) {
+      if (onlineSessions.isNotEmpty) {
         try {
-          ApiService.updateSessions(_userId, onlineSessionsToAdd);
-          await _globalState.setOfflineSessions([]);
+          ApiService.updateSessions(_userId, onlineSessions);
+          // clear offline sessions
+          await _sharedPrefs.setOfflineSessions([]);
         } catch (e) {}
       }
     }
@@ -262,7 +253,7 @@ class _FocusPageState extends State<FocusPage> {
       _endTime = currentTime();
       _elapsedTime = 0;
     });
-    var activeSession = await _globalState.getActiveSession();
+    var activeSession = await _sharedPrefs.getActiveSession();
 
     if (activeSession != null) {
       var duration = _endTime.difference(_startTime).inSeconds;
@@ -274,20 +265,20 @@ class _FocusPageState extends State<FocusPage> {
       try {
         await ApiService.updateSession(_userId, session);
       } catch (e) {
-        var offlineSessions = await _globalState.getOfflineSessions();
+        var offlineSessions = await _sharedPrefs.getOfflineSessions();
         if (offlineSessions != null) {
           offlineSessions.add(session);
         } else {
           offlineSessions = [session];
         }
-        await _globalState.setOfflineSessions(offlineSessions);
+        await _sharedPrefs.setOfflineSessions(offlineSessions);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
               content:
                   Text("Failed to update session on server storing offline")),
         );
       }
-      await _globalState.setActiveSession(null);
+      await _sharedPrefs.setActiveSession(null);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Failed to find active session")),
@@ -296,8 +287,9 @@ class _FocusPageState extends State<FocusPage> {
     _checkTodaysFocus();
   }
 
-  Future<void> _startTimer() async {
-    var runningOnOtherDevice = await _checkActiveSession();
+  Future<void> _startTimer(BuildContext context) async {
+    var globalStates = Provider.of<GlobalStates>(context, listen: false);
+    var runningOnOtherDevice = await _checkActiveSession(context);
     if (runningOnOtherDevice) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Session already running")),
@@ -316,7 +308,7 @@ class _FocusPageState extends State<FocusPage> {
     try {
       await ApiService.addSession(_userId, session);
     } catch (e) {
-      SharedPrefs().setOfflineStatus(true);
+      globalStates.setOfflineState = true;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text("Failed to add session on server storing offline")),
@@ -335,48 +327,49 @@ class _FocusPageState extends State<FocusPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.deepPurple,
-      drawer: const DrawerWidget(),
-      appBar: const AppBarWidget(),
-      body: Center(
-        child: _isFocusMode
-            ? const Text("Timer")
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    _todaysFocus,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    formatTime(_elapsedTime),
-                    style: const TextStyle(
-                      fontSize: 50,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextButton(
-                    onPressed: () {
-                      _isRunning ? _resetTimer() : _startTimer();
-                    },
-                    child: Text(
-                      _isRunning ? "Stop" : "Start",
-                      style: const TextStyle(
-                        fontSize: 20,
-                        color: Colors.white,
+    return Consumer<GlobalStates>(
+        builder: (context, globalStates, child) => Scaffold(
+              backgroundColor: Colors.deepPurple,
+              drawer: const DrawerWidget(),
+              appBar: const AppBarWidget(),
+              body: Center(
+                child: _isFocusMode
+                    ? const Text("Timer")
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            _todaysFocus,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            formatTime(_elapsedTime),
+                            style: const TextStyle(
+                              fontSize: 50,
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          TextButton(
+                            onPressed: () {
+                              _isRunning ? _resetTimer() : _startTimer(context);
+                            },
+                            child: Text(
+                              _isRunning ? "Stop" : "Start",
+                              style: const TextStyle(
+                                fontSize: 20,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-                ],
               ),
-      ),
-    );
+            ));
   }
 
   Widget _focusModeHandler() {

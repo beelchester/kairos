@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kairos/src/pages/focus_page.dart';
 import 'package:kairos/src/pages/timeline_page.dart';
-import 'package:kairos/src/utils.dart';
 
 class DrawerWidget extends StatelessWidget {
   const DrawerWidget({super.key});
@@ -12,12 +11,12 @@ class DrawerWidget extends StatelessWidget {
       backgroundColor: Colors.deepPurple,
       child: Column(
         children: [
-          DrawerHeader(
+          const DrawerHeader(
             child: Text('Profile details'),
           ),
           const SizedBox(height: 30),
           ListTile(
-            title: Text('Home', style: const TextStyle(color: Colors.white)),
+            title: const Text('Home', style: TextStyle(color: Colors.white)),
             onTap: () {
               Navigator.push(
                 context,
@@ -25,62 +24,60 @@ class DrawerWidget extends StatelessWidget {
               );
             },
           ),
-          ListTile(
+          const ListTile(
             // grey out the option
-            title: Text('Stats', style: const TextStyle(color: Colors.grey)),
+            title: Text('Stats', style: TextStyle(color: Colors.grey)),
           ),
           ListTile(
             title:
-                Text('Timeline', style: const TextStyle(color: Colors.white)),
+                const Text('Timeline', style: TextStyle(color: Colors.white)),
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => TimelinePage()),
+                MaterialPageRoute(builder: (context) => const TimelinePage()),
               );
             },
           ),
-          ListTile(
+          const ListTile(
             // grey out the option
-            title:
-                Text('Leaderboard', style: const TextStyle(color: Colors.grey)),
+            title: Text('Leaderboard', style: TextStyle(color: Colors.grey)),
           ),
-          ListTile(
+          const ListTile(
             // grey out the option
-            title: Text('Tags', style: const TextStyle(color: Colors.grey)),
+            title: Text('Tags', style: TextStyle(color: Colors.grey)),
           ),
-          ListTile(
+          const ListTile(
             // grey out the option
-            title:
-                Text('Block Apps', style: const TextStyle(color: Colors.grey)),
+            title: Text('Block Apps', style: TextStyle(color: Colors.grey)),
           ),
-          ListTile(
+          const ListTile(
             // grey out the option
-            title: Text('Settings', style: const TextStyle(color: Colors.grey)),
+            title: Text('Settings', style: TextStyle(color: Colors.grey)),
           ),
-          Spacer(),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 15),
+          const Spacer(),
+          const Padding(
+            padding: EdgeInsets.only(bottom: 15),
             child: Column(
               children: [
                 Text(
                   'Kairos',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 5),
+                SizedBox(height: 5),
                 Text(
                   'Version 0.0.1',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 5),
+                SizedBox(height: 5),
                 Text(
                   'Made with ❤️ by beelchester',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10,
                     color: Colors.white,
                   ),

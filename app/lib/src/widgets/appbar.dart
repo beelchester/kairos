@@ -38,7 +38,7 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   Widget _focusModeHandler() {
     return IconButton(
       onPressed: () {},
-      icon: Icon(
+      icon: const Icon(
         Icons.timer_rounded,
         color: Colors.black,
       ),

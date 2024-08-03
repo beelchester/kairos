@@ -24,3 +24,27 @@ void showNotAvailable(BuildContext context) {
     const SnackBar(content: Text("Feature not available yet")),
   );
 }
+
+void showOfflineSnackBar(BuildContext context) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text(
+        'You are offline',
+        style: TextStyle(color: Colors.white),
+      ),
+      backgroundColor: Colors.red,
+    ),
+  );
+}
+
+void showOnlineSnackBar(BuildContext context) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text(
+        'You are back online',
+        style: TextStyle(color: Colors.white),
+      ),
+      backgroundColor: Colors.green,
+    ),
+  );
+}

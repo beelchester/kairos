@@ -28,16 +28,6 @@ class SharedPrefs {
     return null;
   }
 
-  Future<void> setOfflineStatus(bool offline) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('offline', offline);
-  }
-
-  Future<bool?> getOfflineStatus() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('offline');
-  }
-
   Future<void> setOfflineSessions(List<Session>? sessions) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var sessionsString = jsonEncode(sessions);
