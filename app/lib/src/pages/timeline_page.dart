@@ -6,6 +6,7 @@ import 'package:kairos/src/utils.dart';
 import 'package:kairos/src/widgets/appbar.dart';
 import 'package:kairos/src/widgets/drawer.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 
 import '../shared_prefs.dart';
 
@@ -27,7 +28,8 @@ class _TimelinePageState extends State<TimelinePage> {
   Future<void> _loadSessions(BuildContext context) async {
     var globalStates = Provider.of<GlobalStates>(context, listen: false);
     try {
-      var sessions = await ApiService.getSessions('user1');
+      var sessions = await ApiService.getSessions(
+          '00000000-0000-0000-0000-000000000000' as Uuid);
       globalStates.setSessionsState = sessions;
     } catch (e) {
       var offlineSessions = await _sharedPrefs.getOfflineSessions();

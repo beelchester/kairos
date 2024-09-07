@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:kairos/src/utils.dart';
+import 'package:uuid/uuid.dart';
 import 'models/user.dart';
 import 'models/session.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://127.0.0.1:3333';
+  //WARN: dont push
+  static const String baseUrl = 'http://localhost:3333';
 
   static Future<void> addUser(User user) async {
     final url = Uri.parse('$baseUrl/add_user');
@@ -20,8 +22,8 @@ class ApiService {
     }
   }
 
-  static Future<void> addSession(String userId, Session session) async {
-    final url = Uri.parse('$baseUrl/add_session/$userId');
+  static Future<void> addSession(Uuid userId, Session session) async {
+    final url = Uri.parse('$baseUrl/add_session');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -33,8 +35,8 @@ class ApiService {
     }
   }
 
-  static Future<void> updateSession(String userId, Session session) async {
-    final url = Uri.parse('$baseUrl/update_session/$userId');
+  static Future<void> updateSession(Uuid userId, Session session) async {
+    final url = Uri.parse('$baseUrl/update_session');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -46,20 +48,7 @@ class ApiService {
     }
   }
 
-  static Future<void> updateSessions(
-      String userId, List<Session> sessions) async {
-    final url = Uri.parse('$baseUrl/update_sessions/$userId');
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(sessions),
-    );
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update sessions');
-    }
-  }
-
-  static Future<User?> getUser(String userId) async {
+  static Future<User?> getUser(Uuid userId) async {
     final url = Uri.parse('$baseUrl/get_user/$userId');
     final response = await http.get(url);
 
@@ -72,7 +61,7 @@ class ApiService {
     }
   }
 
-  static Future<List<Session>> getSessions(String userId) async {
+  static Future<List<Session>> getSessions(Uuid userId) async {
     final url = Uri.parse('$baseUrl/get_sessions/$userId');
     final response = await http.get(url);
 
@@ -102,7 +91,7 @@ class ApiService {
     }
   }
 
-  static Future<Session?> checkOnlineActiveSession(String userId) async {
+  static Future<Session?> checkOnlineActiveSession(Uuid userId) async {
     final url = Uri.parse('$baseUrl/check_active_session/$userId');
     final response = await http.get(url);
 
@@ -115,7 +104,7 @@ class ApiService {
     }
   }
 
-  static Future<void> deleteUser(String userId) async {
+  static Future<void> deleteUser(Uuid userId) async {
     final url = Uri.parse('$baseUrl/delete_user/$userId');
     final response = await http.delete(url);
 
@@ -124,17 +113,13 @@ class ApiService {
     }
   }
 
-  static Future<String> getTodaysFocusTime(String userId) async {
-    final url = Uri.parse('$baseUrl/get_todays_sessions/$userId');
+  static Future<String> getTodaysFocusTime(Uuid userId) async {
+    final url = Uri.parse('$baseUrl/get_todays_focus_time/$userId');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
-      var sessions = (jsonDecode(response.body) as List<dynamic>)
-          .map((e) => Session.fromJson(e))
-          .toList();
-      var total = sessions.fold(
-          0, (prev, element) => prev + int.parse(element.duration!));
-      return formatSeconds(total);
+      var duration = (jsonDecode(response.body) as int);
+      return formatSeconds(duration);
     } else if (response.statusCode == 404) {
       return formatSeconds(0);
     } else {

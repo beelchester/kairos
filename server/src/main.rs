@@ -9,5 +9,5 @@ async fn main() -> Result<(), std::io::Error> {
         "Listening on port {}",
         listener.local_addr().unwrap().port()
     );
-    run(listener)?.await
+    run(listener).await
 }

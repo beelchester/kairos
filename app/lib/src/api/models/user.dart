@@ -1,16 +1,20 @@
-import 'package:kairos/src/api/models/session.dart';
+import 'package:uuid/uuid.dart';
 
 class User {
-  final String userId;
+  final Uuid userId;
   final String name;
   final String email;
-  final List<Session>? sessions;
+  final int totalTime;
+  final Duration createdAt;
+  final Duration updatedAt;
 
   User({
     required this.userId,
     required this.name,
     required this.email,
-    this.sessions,
+    required this.totalTime,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -18,9 +22,9 @@ class User {
       userId: json['userId'],
       name: json['name'],
       email: json['email'],
-      sessions: (json['sessions'] as List<dynamic>?)
-          ?.map((item) => Session.fromJson(item))
-          .toList(),
+      totalTime: json['totalTime'],
+      createdAt: json['createdAt'],
+      updatedAt: json['updatedAt'],
     );
   }
 
@@ -29,7 +33,9 @@ class User {
       'userId': userId,
       'name': name,
       'email': email,
-      'sessions': sessions,
+      'totalTime': totalTime,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
     };
   }
 }

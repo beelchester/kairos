@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:kairos/src/api/models/session.dart';
 import 'package:kairos/src/global_states.dart';
@@ -9,6 +8,7 @@ import 'package:kairos/src/api/api_service.dart';
 import 'package:kairos/src/shared_prefs.dart';
 import 'package:kairos/src/widgets/drawer.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 
 class FocusPage extends StatefulWidget {
   const FocusPage({super.key});
@@ -23,9 +23,9 @@ class _FocusPageState extends State<FocusPage> {
   bool _isRunning = false;
   DateTime _startTime = currentTime();
   DateTime _endTime = currentTime();
-  String _sessionId = '0';
   String _todaysFocus = formatSeconds(0);
-  static const String _userId = 'user1';
+  Uuid _sessionId = const Uuid().v4() as Uuid;
+  final Uuid _userId = const Uuid().v4() as Uuid;
   final _sharedPrefs = SharedPrefs();
 
   void _toggleMode() {
@@ -226,7 +226,9 @@ class _FocusPageState extends State<FocusPage> {
     return isActiveSession;
   }
 
+  /// Used to sync sessions across devices
   Future<void> _handleSync() async {
+    // check for offline sessions
     var offlineSessions = await _sharedPrefs.getOfflineSessions();
     if (offlineSessions != null && offlineSessions.isNotEmpty) {
       var onlineSessions = await ApiService.getSessions(_userId);
@@ -234,15 +236,13 @@ class _FocusPageState extends State<FocusPage> {
       for (var session in offlineSessions) {
         if (!onlineSessions
             .any((element) => element.sessionId == session.sessionId)) {
-          onlineSessions.add(session);
+          try {
+            ApiService.addSession(_userId, session);
+            // remove the session that was successfully uploaded from the offline sessions
+            offlineSessions.remove(session);
+            await _sharedPrefs.setOfflineSessions(offlineSessions);
+          } catch (e) {}
         }
-      }
-      if (onlineSessions.isNotEmpty) {
-        try {
-          ApiService.updateSessions(_userId, onlineSessions);
-          // clear offline sessions
-          await _sharedPrefs.setOfflineSessions([]);
-        } catch (e) {}
       }
     }
   }
@@ -259,6 +259,7 @@ class _FocusPageState extends State<FocusPage> {
       var duration = _endTime.difference(_startTime).inSeconds;
       var session = Session(
           sessionId: _sessionId,
+          userId: _userId,
           startedAt: _startTime.toString(),
           endedAt: _endTime.toString(),
           duration: duration.toString());
@@ -301,10 +302,12 @@ class _FocusPageState extends State<FocusPage> {
       _isRunning = true;
       _startTime = currentTime();
       // random session id
-      _sessionId = Random().nextInt(1000000000).toString();
+      _sessionId = const Uuid().v4() as Uuid;
     });
-    var session =
-        Session(sessionId: _sessionId, startedAt: _startTime.toString());
+    var session = Session(
+        sessionId: _sessionId,
+        userId: _userId,
+        startedAt: _startTime.toString());
     try {
       await ApiService.addSession(_userId, session);
     } catch (e) {

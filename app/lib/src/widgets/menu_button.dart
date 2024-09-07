@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:kairos/src/utils.dart';
 
 class MenuButton extends StatelessWidget {
   const MenuButton({super.key});
