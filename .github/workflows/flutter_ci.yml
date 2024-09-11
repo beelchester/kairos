@@ -53,12 +53,12 @@ jobs:
         with:
           name: Releases
           path: |
-            build/app/outputs/flutter-apk/app-release.apk
+            app/build/app/outputs/flutter-apk/app-release.apk
           #TODO: version based release
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "build/app/outputs/flutter-apk/app-release.apk"
+          artifacts: "app/build/app/outputs/flutter-apk/app-release.apk"
           tag: "Nightly"
           token: ${{ secrets.TOKEN }}
 
