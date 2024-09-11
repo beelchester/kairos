@@ -3,7 +3,7 @@ name: Build, test and deploy rust server
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
 
 env:
