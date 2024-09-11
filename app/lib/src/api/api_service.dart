@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:kairos/src/utils.dart';
 import 'models/user.dart';
 import 'models/session.dart';
 
 class ApiService {
   //WARN: dont push
-  static const String baseUrl = 'http://localhost:3333';
+  static String baseUrl = dotenv.env['SERVER_URL'] ?? 'http://localhost:3333';
 
   static Future<void> addUser(User user) async {
     final url = Uri.parse('$baseUrl/add_user');

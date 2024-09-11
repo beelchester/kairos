@@ -1,0 +1,58 @@
+name: Build and release flutter
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build_release:
+    env:
+      SERVER_URL: ${{ env.SERVER_URL }}
+    # used on macos to also build ios
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/chockout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v3.12.0
+        with:
+          distribution: 'oracle'
+          java-version: '17'
+      - name: Setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - name: Install dependencies
+        run: flutter pub get
+        #TODO: sign apk
+    # - name: Decode Keystore
+    #   run: |
+    #     echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
+    #     
+    # - name: Create key.properties
+    #   run: |
+    #     echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" > android/key.properties
+    #     echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+    #     echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
+    #     echo "storeFile=keystore.jks" >> android/key.properties
+
+    #TODO: format, tests
+      - name: Build APK
+        run: flutter build apk --release
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: Releases
+          path: |
+            build/app/outputs/flutter-apk/app-release.apk
+          #TODO: version based release
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "build/app/outputs/flutter-apk/app-release.apk"
+          tag: "Nightly"
+          token: ${{ secrets.TOKEN }}
+
