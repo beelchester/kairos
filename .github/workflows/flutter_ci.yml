@@ -58,6 +58,7 @@ jobs:
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
+          allowUpdates: true
           artifacts: "app/build/app/outputs/flutter-apk/app-release.apk"
           tag: "Nightly"
           token: ${{ secrets.TOKEN }}
