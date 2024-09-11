@@ -6,8 +6,9 @@ on:
       - master
   pull_request:
 
-env:
-  SQLX_OFFLINE: true
+#TODO:
+# env:
+#   SQLX_OFFLINE: true
 
 jobs:
   test:
