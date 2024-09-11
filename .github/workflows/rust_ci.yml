@@ -6,9 +6,10 @@ on:
       - master
   pull_request:
 
-#TODO:
-# env:
-#   SQLX_OFFLINE: true
+env:
+  #TODO:
+  # SQLX_OFFLINE: true
+  DATABASE_URL=""
 
 jobs:
   test:
