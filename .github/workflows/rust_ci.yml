@@ -39,7 +39,6 @@ jobs:
 
     - name: Build and test code
       run: |
-        cargo sqlx prepare
         cargo build --verbose
         cargo test --verbose
   #TODO: format, clippy
