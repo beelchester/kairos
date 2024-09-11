@@ -1,18 +1,16 @@
-import 'package:uuid/uuid.dart';
-
 class Session {
-  final Uuid sessionId;
-  final Uuid userId;
+  final String sessionId;
+  final String userId;
   final String startedAt;
   String? endedAt;
-  String? duration;
+  int duration;
 
   Session({
     required this.sessionId,
     required this.userId,
     required this.startedAt,
     this.endedAt,
-    this.duration,
+    required this.duration,
   });
 
   factory Session.fromJson(Map<String, dynamic> json) {

@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:kairos/src/utils.dart';
-import 'package:uuid/uuid.dart';
 import 'models/user.dart';
 import 'models/session.dart';
 
@@ -22,7 +21,7 @@ class ApiService {
     }
   }
 
-  static Future<void> addSession(Uuid userId, Session session) async {
+  static Future<void> addSession(String userId, Session session) async {
     final url = Uri.parse('$baseUrl/add_session');
     final response = await http.post(
       url,
@@ -35,7 +34,7 @@ class ApiService {
     }
   }
 
-  static Future<void> updateSession(Uuid userId, Session session) async {
+  static Future<void> updateSession(String userId, Session session) async {
     final url = Uri.parse('$baseUrl/update_session');
     final response = await http.post(
       url,
@@ -48,7 +47,7 @@ class ApiService {
     }
   }
 
-  static Future<User?> getUser(Uuid userId) async {
+  static Future<User?> getUser(String userId) async {
     final url = Uri.parse('$baseUrl/get_user/$userId');
     final response = await http.get(url);
 
@@ -61,7 +60,7 @@ class ApiService {
     }
   }
 
-  static Future<List<Session>> getSessions(Uuid userId) async {
+  static Future<List<Session>> getSessions(String userId) async {
     final url = Uri.parse('$baseUrl/get_sessions/$userId');
     final response = await http.get(url);
 
@@ -91,7 +90,7 @@ class ApiService {
     }
   }
 
-  static Future<Session?> checkOnlineActiveSession(Uuid userId) async {
+  static Future<Session?> checkOnlineActiveSession(String userId) async {
     final url = Uri.parse('$baseUrl/check_active_session/$userId');
     final response = await http.get(url);
 
@@ -104,7 +103,7 @@ class ApiService {
     }
   }
 
-  static Future<void> deleteUser(Uuid userId) async {
+  static Future<void> deleteUser(String userId) async {
     final url = Uri.parse('$baseUrl/delete_user/$userId');
     final response = await http.delete(url);
 
@@ -113,7 +112,7 @@ class ApiService {
     }
   }
 
-  static Future<String> getTodaysFocusTime(Uuid userId) async {
+  static Future<String> getTodaysFocusTime(String userId) async {
     final url = Uri.parse('$baseUrl/get_todays_focus_time/$userId');
     final response = await http.get(url);
 

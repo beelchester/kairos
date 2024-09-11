@@ -6,7 +6,6 @@ import 'package:kairos/src/utils.dart';
 import 'package:kairos/src/widgets/appbar.dart';
 import 'package:kairos/src/widgets/drawer.dart';
 import 'package:provider/provider.dart';
-import 'package:uuid/uuid.dart';
 
 import '../shared_prefs.dart';
 
@@ -28,8 +27,8 @@ class _TimelinePageState extends State<TimelinePage> {
   Future<void> _loadSessions(BuildContext context) async {
     var globalStates = Provider.of<GlobalStates>(context, listen: false);
     try {
-      var sessions = await ApiService.getSessions(
-          '00000000-0000-0000-0000-000000000000' as Uuid);
+      var sessions =
+          await ApiService.getSessions('00000000-0000-0000-0000-000000000000');
       globalStates.setSessionsState = sessions;
     } catch (e) {
       var offlineSessions = await _sharedPrefs.getOfflineSessions();
@@ -63,14 +62,13 @@ class _TimelinePageState extends State<TimelinePage> {
         padding: const EdgeInsets.all(10),
         child: Column(
           children: [
-            if (session.duration != null)
-              Text(
-                formatSeconds(int.parse(session.duration!)),
-                style: const TextStyle(
-                  fontSize: 24,
-                  color: Colors.black,
-                ),
+            Text(
+              formatSeconds(session.duration),
+              style: const TextStyle(
+                fontSize: 24,
+                color: Colors.black,
               ),
+            ),
             const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -101,13 +99,35 @@ class _TimelinePageState extends State<TimelinePage> {
                   ),
               ],
             ),
-            Text(
-              session.startedAt.substring(0, 11),
-              style: const TextStyle(
-                fontSize: 15,
-                color: Colors.black,
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Text(
+                session.startedAt.substring(0, 10),
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: Colors.black,
+                ),
               ),
-            ),
+              if (session.endedAt!.substring(0, 10) !=
+                  session.startedAt.substring(0, 10))
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  const SizedBox(width: 5),
+                  const Text(
+                    'to',
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    session.endedAt!.substring(0, 10),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Colors.black,
+                    ),
+                  ),
+                ])
+            ]),
           ],
         ),
       ),

@@ -24,8 +24,9 @@ class _FocusPageState extends State<FocusPage> {
   DateTime _startTime = currentTime();
   DateTime _endTime = currentTime();
   String _todaysFocus = formatSeconds(0);
-  Uuid _sessionId = const Uuid().v4() as Uuid;
-  final Uuid _userId = const Uuid().v4() as Uuid;
+  String _sessionId = const Uuid().v4();
+  // final String _userId = const Uuid().v4();
+  final String _userId = "00000000-0000-0000-0000-000000000000".toString();
   final _sharedPrefs = SharedPrefs();
 
   void _toggleMode() {
@@ -63,9 +64,7 @@ class _FocusPageState extends State<FocusPage> {
             // if session is today
             if (session.startedAt.substring(0, 10) ==
                 currentTime().toString().substring(0, 10)) {
-              if (session.duration != null) {
-                total += int.parse(session.duration!);
-              }
+              total += session.duration;
             }
           }
           setState(() {
@@ -162,7 +161,7 @@ class _FocusPageState extends State<FocusPage> {
             // ending old active online session and adding new offline active session if not already present in online else update
             activeSession.endedAt = currentTime().toString();
             var duration = DateTime.now().difference(_startTime).inSeconds;
-            activeSession.duration = duration.toString();
+            activeSession.duration = duration;
             await ApiService.updateSession(_userId, activeSession);
             var onlineSessions = await ApiService.getSessions(_userId);
             if (onlineSessions.any(
@@ -262,7 +261,7 @@ class _FocusPageState extends State<FocusPage> {
           userId: _userId,
           startedAt: _startTime.toString(),
           endedAt: _endTime.toString(),
-          duration: duration.toString());
+          duration: duration);
       try {
         await ApiService.updateSession(_userId, session);
       } catch (e) {
@@ -302,12 +301,13 @@ class _FocusPageState extends State<FocusPage> {
       _isRunning = true;
       _startTime = currentTime();
       // random session id
-      _sessionId = const Uuid().v4() as Uuid;
+      _sessionId = const Uuid().v4();
     });
     var session = Session(
         sessionId: _sessionId,
         userId: _userId,
-        startedAt: _startTime.toString());
+        startedAt: _startTime.toString(),
+        duration: 0);
     try {
       await ApiService.addSession(_userId, session);
     } catch (e) {
