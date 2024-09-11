@@ -9,6 +9,10 @@ on:
 env:
   SERVER_URL: ${{ secrets.SERVER_URL }}
 
+defaults:
+  run:
+    working-directory: ./app
+
 jobs:
   build_release:
     # used on macos to also build ios
@@ -28,7 +32,6 @@ jobs:
         with:
           channel: 'stable'
       - name: Install dependencies
-        working-directory: ./app
         run: flutter pub get
         #TODO: sign apk
     # - name: Decode Keystore
@@ -44,10 +47,8 @@ jobs:
 
     #TODO: format, tests
       - name: Build APK
-        working-directory: ./app
         run: flutter build apk --release
       - name: Upload Artifacts
-        working-directory: ./app
         uses: actions/upload-artifact@v4
         with:
           name: Releases
@@ -55,7 +56,6 @@ jobs:
             build/app/outputs/flutter-apk/app-release.apk
           #TODO: version based release
       - name: Create Release
-        working-directory: ./app
         uses: ncipollo/release-action@v1
         with:
           artifacts: "build/app/outputs/flutter-apk/app-release.apk"

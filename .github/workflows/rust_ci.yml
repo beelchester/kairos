@@ -9,6 +9,11 @@ on:
 env:
   SQLX_OFFLINE: true
 
+defaults:
+  run:
+    working-directory: ./server
+
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -19,7 +24,6 @@ jobs:
 
     - name: Cache dependencies
       uses: actions/cache@v3
-      working-directory: ./server
       with:
         path: |
           ~/.cargo
@@ -34,7 +38,6 @@ jobs:
         toolchain: stable
 
     - name: Build and test code
-      working-directory: ./server
       run: |
         cargo build --verbose
         cargo test --verbose
