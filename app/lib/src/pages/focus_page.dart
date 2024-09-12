@@ -147,8 +147,7 @@ class _FocusPageState extends State<FocusPage> {
           if (offlineSessions != null) {
             // already ended in offline
             for (var session in offlineSessions) {
-              if (session.sessionId == activeSession.sessionId &&
-                  session.duration != null) {
+              if (session.sessionId == activeSession.sessionId) {
                 alreadyEndedInOffline = true;
                 activeSession.endedAt = session.endedAt;
                 activeSession.duration = session.duration;
@@ -320,6 +319,9 @@ class _FocusPageState extends State<FocusPage> {
     SharedPrefs().setActiveSession(session);
     Timer.periodic(const Duration(milliseconds: 500), (timer) {
       if (!_isRunning) {
+        timer.cancel();
+      }
+      if (_elapsedTime / 3600 == globalStates.settings.maxSessionDuration) {
         timer.cancel();
       }
       setState(() {

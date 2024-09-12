@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:kairos/src/pages/focus_page.dart';
-import 'package:kairos/src/pages/timeline_page.dart';
 
 class DrawerWidget extends StatelessWidget {
   const DrawerWidget({super.key});
@@ -8,7 +6,7 @@ class DrawerWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      backgroundColor: Colors.deepPurple,
+      backgroundColor: Colors.black87,
       child: Column(
         children: [
           const DrawerHeader(
@@ -44,9 +42,13 @@ class DrawerWidget extends StatelessWidget {
             // grey out the option
             title: Text('Block Apps', style: TextStyle(color: Colors.grey)),
           ),
-          const ListTile(
+          ListTile(
             // grey out the option
-            title: Text('Settings', style: TextStyle(color: Colors.grey)),
+            title:
+                const Text('Settings', style: TextStyle(color: Colors.white)),
+            onTap: () {
+              Navigator.pushNamed(context, '/settings');
+            },
           ),
           const Spacer(),
           const Padding(

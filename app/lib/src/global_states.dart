@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kairos/src/api/models/session.dart';
+import 'package:kairos/src/settings.dart';
 
 class GlobalStates extends ChangeNotifier {
   bool isOffline = false;
@@ -32,6 +33,14 @@ class GlobalStates extends ChangeNotifier {
 
   set setSessionsState(List<Session> value) {
     sessions = value;
+    notifyListeners();
+  }
+
+  Settings settings = Settings(maxSessionDuration: 4);
+  Settings get settingsState => settings;
+
+  set setSettingsState(Settings value) {
+    settings = value;
     notifyListeners();
   }
 }

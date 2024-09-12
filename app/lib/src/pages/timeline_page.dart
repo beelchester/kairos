@@ -54,7 +54,7 @@ class _TimelinePageState extends State<TimelinePage> {
   }
 
   Widget _sessionCard(Session session) {
-    if (session.duration == null || session.endedAt == null) {
+    if (session.endedAt == null) {
       return const SizedBox();
     }
     return Card(
