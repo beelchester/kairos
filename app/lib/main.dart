@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:kairos/src/global_states.dart';
 import 'package:kairos/src/pages/focus_page.dart';
+import 'package:kairos/src/pages/login_page.dart';
+import 'package:kairos/src/pages/timeline_page.dart';
 import 'package:provider/provider.dart';
 
 Future main() async {
@@ -13,8 +15,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: FocusPage(),
-    );
+    return MaterialApp(routes: {
+      "/": (context) => const LoginPage(),
+      "/focus": (context) => const FocusPage(),
+      "/timeline": (context) => const TimelinePage()
+    });
   }
 }

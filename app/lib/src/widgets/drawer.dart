@@ -18,10 +18,7 @@ class DrawerWidget extends StatelessWidget {
           ListTile(
             title: const Text('Home', style: TextStyle(color: Colors.white)),
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const FocusPage()),
-              );
+              Navigator.pushNamed(context, '/focus');
             },
           ),
           const ListTile(
@@ -32,10 +29,7 @@ class DrawerWidget extends StatelessWidget {
             title:
                 const Text('Timeline', style: TextStyle(color: Colors.white)),
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const TimelinePage()),
-              );
+              Navigator.pushNamed(context, '/timeline');
             },
           ),
           const ListTile(
