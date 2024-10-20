@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:kairos/src/api/models/session.dart';
-import 'package:kairos/src/settings.dart';
 
 class GlobalStates extends ChangeNotifier {
   bool isOffline = false;
