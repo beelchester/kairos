@@ -35,12 +35,4 @@ class GlobalStates extends ChangeNotifier {
     sessions = value;
     notifyListeners();
   }
-
-  Settings settings = Settings(maxSessionDuration: 4);
-  Settings get settingsState => settings;
-
-  set setSettingsState(Settings value) {
-    settings = value;
-    notifyListeners();
-  }
 }

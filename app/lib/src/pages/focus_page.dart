@@ -82,6 +82,8 @@ class _FocusPageState extends State<FocusPage> {
     try {
       var health = await ApiService.checkHealth();
       if (!health) {
+        // NOTE: Offline
+        // NOTE: Handling snackbar for offline
         if (!offline) {
           // was online till now
           var shownOffline = globalStates.shownOfflineSnackBar;
@@ -95,7 +97,36 @@ class _FocusPageState extends State<FocusPage> {
           globalStates.setOfflineState = true;
         }
         var session = await _sharedPrefs.getActiveSession();
+        // NOTE: Case 1 for max session limiter:
+        // Handling session duration > maxSessionDuration when offline
+        var maxSessionDuration = await _sharedPrefs.getMaxSessionDuration();
+        var maxSessionDurationInSecs = maxSessionDuration! * 3600;
+        if (session != null) {
+          var duration = DateTime.now()
+              .difference(DateTime.parse(session.startedAt))
+              .inSeconds;
+          if (duration > maxSessionDurationInSecs) {
+            session.duration = maxSessionDurationInSecs;
+            var startedAt = DateTime.parse(session.startedAt);
+            // add maxSessionDurationInSecs to startedAt
+            var endedAt =
+                startedAt.add(Duration(seconds: maxSessionDurationInSecs));
+            session.endedAt = endedAt.toString();
+            var offlineSessions = await _sharedPrefs.getOfflineSessions();
+            if (offlineSessions != null) {
+              offlineSessions.add(session);
+              await _sharedPrefs.setOfflineSessions(offlineSessions);
+            }
+            _sharedPrefs.setActiveSession(null);
+            setState(() {
+              _isRunning = false;
+            });
+            return false;
+          }
+        }
+
         if (session != null && !_isRunning) {
+          // NOTE: Found active session in local storage and not running.. so start timer
           setState(() {
             _sessionId = session.sessionId;
             _startTime = DateTime.parse(session.startedAt);
@@ -118,53 +149,84 @@ class _FocusPageState extends State<FocusPage> {
     } catch (e) {
       return false;
     }
-    // state online
+    // NOTE: Online
     var isActiveSession = false;
+
+    // NOTE: Case 2 for max session limiter:
+    // Handling session duration > maxSessionDuration when online and offline active session are same
+    var offlineSession = await _sharedPrefs.getActiveSession();
+    var onlineActiveSession =
+        await ApiService.checkOnlineActiveSession(_userId);
+    var maxSessionDuration = await _sharedPrefs.getMaxSessionDuration();
+    var maxSessionDurationInSecs = maxSessionDuration! * 3600;
+    if (offlineSession != null &&
+        onlineActiveSession != null &&
+        offlineSession.sessionId == onlineActiveSession.sessionId) {
+      var duration = DateTime.now()
+          .difference(DateTime.parse(offlineSession.startedAt))
+          .inSeconds;
+      if (duration > maxSessionDurationInSecs) {
+        offlineSession.duration = maxSessionDurationInSecs;
+        var startedAt = DateTime.parse(offlineSession.startedAt);
+        // add maxSessionDurationInSecs to startedAt
+        var endedAt =
+            startedAt.add(Duration(seconds: maxSessionDurationInSecs));
+        offlineSession.endedAt = endedAt.toString();
+        await _sharedPrefs.setActiveSession(null);
+        setState(() {
+          _isRunning = false;
+        });
+        ApiService.updateSession(_userId, offlineSession);
+        return false;
+      }
+    }
 
     globalStates.setOfflineState = false;
     var shownOnline = globalStates.shownOnlineSnackBar;
     if (!offline && !shownOnline) {
+      // NOTE: Handling snackbar for back online
       globalStates.setShownOnlineSnackBarState = true;
       globalStates.setShownOfflineSnackBarState = false;
       showOnlineSnackBar(context);
     }
-    // check for online active session
-    var activeSession = await ApiService.checkOnlineActiveSession(_userId);
-    if (activeSession != null) {
+    // NOTE: check for online active session
+    if (onlineActiveSession != null) {
       // prioritize offline active session
       // stop online active session
       if (offline) {
+        // NOTE: Handling online and offline sessions for syncing
         // was offline till now
         globalStates.setSessionsState = await ApiService.getSessions(_userId);
         var offlineActiveSession = await _sharedPrefs.getActiveSession();
-        if (offlineActiveSession != null) {}
         if (offlineActiveSession != null &&
-            offlineActiveSession.sessionId != activeSession.sessionId) {
+            offlineActiveSession.sessionId != onlineActiveSession.sessionId) {
           await _sharedPrefs.setActiveSession(offlineActiveSession);
           var alreadyEndedInOffline = false;
           // find online session in offline sessions
+          // NOTE: offline sessions in local storage is cache of sessions that were not uploaded to server
+          // once they are uploaded, they are removed from local storage
           var offlineSessions = await _sharedPrefs.getOfflineSessions();
           if (offlineSessions != null) {
             // already ended in offline
             for (var session in offlineSessions) {
-              if (session.sessionId == activeSession.sessionId) {
+              if (session.sessionId == onlineActiveSession.sessionId) {
                 alreadyEndedInOffline = true;
-                activeSession.endedAt = session.endedAt;
-                activeSession.duration = session.duration;
-                await ApiService.updateSession(_userId, activeSession);
+                onlineActiveSession.endedAt = session.endedAt;
+                onlineActiveSession.duration = session.duration;
+                await ApiService.updateSession(_userId, onlineActiveSession);
                 return true;
               }
             }
           }
           if (!alreadyEndedInOffline) {
             // ending old active online session and adding new offline active session if not already present in online else update
-            activeSession.endedAt = currentTime().toString();
+            onlineActiveSession.endedAt = currentTime().toString();
             var duration = DateTime.now().difference(_startTime).inSeconds;
-            activeSession.duration = duration;
-            await ApiService.updateSession(_userId, activeSession);
+            onlineActiveSession.duration = duration;
+            await ApiService.updateSession(_userId, onlineActiveSession);
             var onlineSessions = await ApiService.getSessions(_userId);
-            if (onlineSessions.any(
-                (element) => element.sessionId == activeSession.sessionId)) {
+            if (onlineSessions.any((element) =>
+                element.sessionId == onlineActiveSession.sessionId)) {
               await ApiService.updateSession(_userId, offlineActiveSession);
             } else {
               await ApiService.addSession(_userId, offlineActiveSession);
@@ -174,12 +236,12 @@ class _FocusPageState extends State<FocusPage> {
           }
         }
       }
-      // no offline active session found
-      await _sharedPrefs.setActiveSession(activeSession);
+      // NOTE: no offline active session found so set active session to online active session
+      await _sharedPrefs.setActiveSession(onlineActiveSession);
       // ensure elapsed time is always correct
       setState(() {
-        _sessionId = activeSession.sessionId;
-        _startTime = DateTime.parse(activeSession.startedAt);
+        _sessionId = onlineActiveSession.sessionId;
+        _startTime = DateTime.parse(onlineActiveSession.startedAt);
         _elapsedTime = (DateTime.now().difference(_startTime).inSeconds) * 2;
       });
       if (!_isRunning) {
@@ -197,6 +259,7 @@ class _FocusPageState extends State<FocusPage> {
       }
       isActiveSession = true;
     } else {
+      // NOTE: no online active session found so check for offline active session
       var session = await _sharedPrefs.getActiveSession();
       //if it was just offline check if there is an offline active session
       if (session != null && offline) {
@@ -204,11 +267,13 @@ class _FocusPageState extends State<FocusPage> {
         var onlineSessions = await ApiService.getSessions(_userId);
         // await _sharedPrefs.setOfflineStatus(false);
         globalStates.setOfflineState = false;
+        // NOTE: if offline active session is not already in online sessions, add it
         if (!onlineSessions
             .any((element) => element.sessionId == session.sessionId)) {
           await ApiService.addSession(_userId, session);
           isActiveSession = true;
         } else {
+          // NOTE: if offline active session is already cancelled in online, remove it
           isActiveSession = false;
           await _sharedPrefs.setActiveSession(null);
         }
@@ -264,6 +329,7 @@ class _FocusPageState extends State<FocusPage> {
       try {
         await ApiService.updateSession(_userId, session);
       } catch (e) {
+        // NOTE: if failed to update session on server, store offline
         var offlineSessions = await _sharedPrefs.getOfflineSessions();
         if (offlineSessions != null) {
           offlineSessions.add(session);
@@ -310,6 +376,7 @@ class _FocusPageState extends State<FocusPage> {
     try {
       await ApiService.addSession(_userId, session);
     } catch (e) {
+      // NOTE: if failed to add session on server, store offline
       globalStates.setOfflineState = true;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -319,11 +386,19 @@ class _FocusPageState extends State<FocusPage> {
     SharedPrefs().setActiveSession(session);
     Timer.periodic(const Duration(milliseconds: 500), (timer) {
       if (!_isRunning) {
+        setState(() {
+          _elapsedTime = 0;
+        });
         timer.cancel();
       }
-      if (_elapsedTime / 3600 == globalStates.settings.maxSessionDuration) {
+      if (session.endedAt != null) {
         timer.cancel();
       }
+      // var maxSessionDuration = await _sharedPrefs.getMaxSessionDuration();
+      // var maxSessionDurationInSecs = maxSessionDuration! * 3600;
+      // if (_elapsedTime >= maxSessionDurationInSecs) {
+      //   timer.cancel();
+      // }
       setState(() {
         _elapsedTime++;
       });

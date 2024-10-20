@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kairos/src/global_states.dart';
+import 'package:kairos/src/shared_prefs.dart';
 import 'package:kairos/src/widgets/appbar.dart';
 import 'package:kairos/src/widgets/drawer.dart';
 import 'package:provider/provider.dart';
@@ -12,9 +13,19 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  final _sharedPrefs = SharedPrefs();
+  int? _maxSessionDuration;
   @override
   void initState() {
     super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    var maxSessionDuration = await _sharedPrefs.getMaxSessionDuration();
+    setState(() {
+      _maxSessionDuration = maxSessionDuration;
+    });
   }
 
   @override
@@ -33,9 +44,56 @@ class _SettingsPageState extends State<SettingsPage> {
         height: 50,
         color: Colors.black45,
         child: Center(
-            child: Text(
-          'Max Session Duration: ${globalState.settings.maxSessionDuration}',
-          style: const TextStyle(color: Colors.white),
+            child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Max Session Duration',
+              style: const TextStyle(color: Colors.white),
+            ),
+            const SizedBox(width: 10),
+            Theme(
+                data: Theme.of(context).copyWith(
+                  canvasColor: Colors.deepPurpleAccent,
+                ),
+                child: DropdownButton<int>(
+                  value: _maxSessionDuration,
+                  onChanged: (int? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        _maxSessionDuration = newValue;
+                      });
+                      _sharedPrefs.setMaxSessionDuration(newValue);
+                    }
+                  },
+                  items: const [
+                    DropdownMenuItem(
+                        value: 1,
+                        child: Text(
+                          '1 hour',
+                          style: TextStyle(color: Colors.white),
+                        )),
+                    DropdownMenuItem(
+                        value: 2,
+                        child: Text(
+                          '2 hours',
+                          style: TextStyle(color: Colors.white),
+                        )),
+                    DropdownMenuItem(
+                        value: 3,
+                        child: Text(
+                          '3 hours',
+                          style: TextStyle(color: Colors.white),
+                        )),
+                    DropdownMenuItem(
+                        value: 4,
+                        child: Text(
+                          '4 hours',
+                          style: TextStyle(color: Colors.white),
+                        )),
+                  ],
+                )),
+          ],
         )),
       )
     ]);

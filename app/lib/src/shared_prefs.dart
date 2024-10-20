@@ -9,6 +9,29 @@ class SharedPrefs {
 
   SharedPrefs._internal();
 
+  Future<void> setMaxSessionDuration(int maxSessionDuration) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    // NOTE: maxSessionDuration is in hours
+    // Max session duration is 4 hours
+    // if (maxSessionDuration != 0 && maxSessionDuration <= 4) {
+    //TODO: remove
+    if (maxSessionDuration <= 4) {
+      await prefs.setInt('maxSessionDuration', maxSessionDuration);
+    }
+  }
+
+  Future<int?> getMaxSessionDuration() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var maxSessionDuration = prefs.getInt('maxSessionDuration');
+    if (maxSessionDuration != null) {
+      return maxSessionDuration;
+    } else {
+      // Default max session duration is 2 hours
+      await prefs.setInt('maxSessionDuration', 2);
+      return 2;
+    }
+  }
+
   Future<void> setActiveSession(Session? session) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (session != null) {
