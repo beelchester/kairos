@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kairos/src/api/google_sign_in_service.dart';
 import 'package:kairos/src/global_states.dart';
 import 'package:kairos/src/shared_prefs.dart';
 import 'package:kairos/src/widgets/appbar.dart';
@@ -34,7 +35,7 @@ class _SettingsPageState extends State<SettingsPage> {
         builder: (context, globalStates, child) => Scaffold(
             appBar: const AppBarWidget(),
             drawer: const DrawerWidget(),
-            backgroundColor: Colors.deepPurple,
+            backgroundColor: Theme.of(context).colorScheme.surface,
             body: _settingsList(globalStates)));
   }
 
@@ -45,16 +46,16 @@ class _SettingsPageState extends State<SettingsPage> {
         color: Colors.black45,
         child: Center(
             child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Text(
+            const Text(
               'Max Session Duration',
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.white),
             ),
             const SizedBox(width: 10),
             Theme(
                 data: Theme.of(context).copyWith(
-                  canvasColor: Colors.deepPurpleAccent,
+                  canvasColor: Theme.of(context).colorScheme.surfaceBright,
                 ),
                 child: DropdownButton<int>(
                   value: _maxSessionDuration,
@@ -84,16 +85,28 @@ class _SettingsPageState extends State<SettingsPage> {
                         child: Text(
                           '3 hours',
                           style: TextStyle(color: Colors.white),
-                        )),
-                    DropdownMenuItem(
-                        value: 4,
-                        child: Text(
-                          '4 hours',
-                          style: TextStyle(color: Colors.white),
-                        )),
+                        ))
                   ],
                 )),
           ],
+        )),
+      ),
+      //logout button
+      const SizedBox(height: 10),
+      SizedBox(
+        height: 50,
+        child: Center(
+            child: ElevatedButton(
+          onPressed: () {
+            GoogleSignInService().logout();
+            Navigator.of(context).pushReplacementNamed('/');
+          },
+          style: ButtonStyle(
+            backgroundColor: WidgetStateProperty.all(
+              Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          child: const Text("Logout", style: TextStyle(color: Colors.black)),
         )),
       )
     ]);

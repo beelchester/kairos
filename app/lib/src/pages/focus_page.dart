@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:flutter/material.dart';
 import 'package:kairos/src/api/models/session.dart';
 import 'package:kairos/src/global_states.dart';
@@ -18,6 +19,7 @@ class FocusPage extends StatefulWidget {
 }
 
 class _FocusPageState extends State<FocusPage> {
+  final int _duration = 10;
   bool _isFocusMode = false;
   int _elapsedTime = 0;
   bool _isRunning = false;
@@ -28,6 +30,8 @@ class _FocusPageState extends State<FocusPage> {
   // final String _userId = const Uuid().v4();
   final String _userId = "00000000-0000-0000-0000-000000000000".toString();
   final _sharedPrefs = SharedPrefs();
+
+  final CountDownController _controller = CountDownController();
 
   void _toggleMode() {
     setState(() {
@@ -130,6 +134,8 @@ class _FocusPageState extends State<FocusPage> {
           setState(() {
             _sessionId = session.sessionId;
             _startTime = DateTime.parse(session.startedAt);
+
+            //TODO: handle this in countdown package
             _elapsedTime =
                 (DateTime.now().difference(_startTime).inSeconds) * 2;
             _isRunning = true;
@@ -242,6 +248,7 @@ class _FocusPageState extends State<FocusPage> {
       setState(() {
         _sessionId = onlineActiveSession.sessionId;
         _startTime = DateTime.parse(onlineActiveSession.startedAt);
+        //TODO: handle this in countdown package
         _elapsedTime = (DateTime.now().difference(_startTime).inSeconds) * 2;
       });
       if (!_isRunning) {
@@ -311,6 +318,7 @@ class _FocusPageState extends State<FocusPage> {
   }
 
   Future<void> _resetTimer() async {
+    _controller.reset();
     setState(() {
       _isRunning = false;
       _endTime = currentTime();
@@ -353,6 +361,7 @@ class _FocusPageState extends State<FocusPage> {
   }
 
   Future<void> _startTimer(BuildContext context) async {
+    _controller.start();
     var globalStates = Provider.of<GlobalStates>(context, listen: false);
     var runningOnOtherDevice = await _checkActiveSession(context);
     if (runningOnOtherDevice) {
@@ -384,32 +393,33 @@ class _FocusPageState extends State<FocusPage> {
       );
     }
     SharedPrefs().setActiveSession(session);
-    Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      if (!_isRunning) {
-        setState(() {
-          _elapsedTime = 0;
-        });
-        timer.cancel();
-      }
-      if (session.endedAt != null) {
-        timer.cancel();
-      }
-      // var maxSessionDuration = await _sharedPrefs.getMaxSessionDuration();
-      // var maxSessionDurationInSecs = maxSessionDuration! * 3600;
-      // if (_elapsedTime >= maxSessionDurationInSecs) {
-      //   timer.cancel();
-      // }
-      setState(() {
-        _elapsedTime++;
-      });
-    });
+    //NOTE: not needed since its done in countdown package
+    //   Timer.periodic(const Duration(milliseconds: 500), (timer) {
+    //     if (!_isRunning) {
+    //       setState(() {
+    //         _elapsedTime = 0;
+    //       });
+    //       timer.cancel();
+    //     }
+    //     if (session.endedAt != null) {
+    //       timer.cancel();
+    //     }
+    //     // var maxSessionDuration = await _sharedPrefs.getMaxSessionDuration();
+    //     // var maxSessionDurationInSecs = maxSessionDuration! * 3600;
+    //     // if (_elapsedTime >= maxSessionDurationInSecs) {
+    //     //   timer.cancel();
+    //     // }
+    //     setState(() {
+    //       _elapsedTime++;
+    //     });
+    //   });
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<GlobalStates>(
         builder: (context, globalStates, child) => Scaffold(
-              backgroundColor: Colors.deepPurple,
+              backgroundColor: Theme.of(context).colorScheme.surface,
               drawer: const DrawerWidget(),
               appBar: const AppBarWidget(),
               body: Center(
@@ -422,27 +432,132 @@ class _FocusPageState extends State<FocusPage> {
                             _todaysFocus,
                             style: const TextStyle(
                               fontSize: 15,
-                              color: Colors.black,
+                              color: Colors.white,
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          Text(
-                            formatTime(_elapsedTime),
-                            style: const TextStyle(
-                              fontSize: 50,
-                              color: Colors.black,
+                          // const SizedBox(height: 10),
+                          CircularCountDownTimer(
+                            // Countdown total duration in Seconds.
+                            //TODO: in stopwatch mode.. use max duration.. i.e 3 hrs
+                            duration: _duration,
+
+                            // Countdown initial elapsed Duration in Seconds.
+                            initialDuration: 0,
+
+                            // Controls (i.e Start, Pause, Resume, Restart) the Countdown Timer.
+                            controller: _controller,
+
+                            // Width of the Countdown Widget.
+                            width: MediaQuery.of(context).size.width / 2,
+
+                            // Height of the Countdown Widget.
+                            height: MediaQuery.of(context).size.height / 2,
+
+                            // Ring Color for Countdown Widget.
+                            ringColor: const Color(0xFF4A4462),
+
+                            // Ring Gradient for Countdown Widget.
+                            ringGradient: null,
+
+                            // Filling Color for Countdown Widget.
+                            fillColor: Colors.purpleAccent[100]!,
+
+                            // Filling Gradient for Countdown Widget.
+                            fillGradient: LinearGradient(
+                              colors: [
+                                Theme.of(context).colorScheme.primary,
+                                Theme.of(context).colorScheme.tertiary,
+                              ],
+                              stops: const [0.0, 1.0],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
                             ),
+
+                            // Background Color for Countdown Widget.
+                            backgroundColor: null,
+
+                            // Background Gradient for Countdown Widget.
+                            backgroundGradient: null,
+
+                            // Border Thickness of the Countdown Ring.
+                            strokeWidth: 20.0,
+
+                            // Begin and end contours with a flat edge and no extension.
+                            strokeCap: StrokeCap.round,
+
+                            // Text Style for Countdown Text.
+                            textStyle: const TextStyle(
+                              fontSize: 33.0,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+
+                            // Format for the Countdown Text.
+                            textFormat: CountdownTextFormat.S,
+
+                            // Handles Countdown Timer (true for Reverse Countdown (max to 0), false for Forward Countdown (0 to max)).
+                            isReverse: false,
+
+                            // Handles Animation Direction (true for Reverse Animation, false for Forward Animation).
+                            isReverseAnimation: false,
+
+                            // Handles visibility of the Countdown Text.
+                            isTimerTextShown: true,
+
+                            // Handles the timer start.
+                            autoStart: false,
+
+                            // This Callback will execute when the Countdown Starts.
+                            onStart: () {
+                              // Here, do whatever you want
+                              debugPrint('Countdown Started');
+                            },
+
+                            // This Callback will execute when the Countdown Ends.
+                            onComplete: () {
+                              // Here, do whatever you want
+                              _elapsedTime++;
+                              _resetTimer();
+                              debugPrint('Countdown Ended');
+                            },
+
+                            timeFormatterFunction: (_, duration) {
+                              return formatSeconds(duration.inSeconds);
+                            },
+
+                            // This Callback will execute when the Countdown Changes.
+                            onChange: (String timeStamp) {
+                              // Here, do whatever you want
+                              _elapsedTime = parseSeconds(timeStamp);
+                              debugPrint('Countdown Changed $_elapsedTime');
+                            },
                           ),
+                          // Text(
+                          //   formatTime(_elapsedTime),
+                          //   style: const TextStyle(
+                          //     fontSize: 50,
+                          //     color: Colors.white,
+                          //   ),
+                          // ),
                           const SizedBox(height: 10),
-                          TextButton(
+                          ElevatedButton(
+                            style: ButtonStyle(
+                              backgroundColor: !_isRunning
+                                  ? WidgetStateProperty.all(
+                                      Theme.of(context).colorScheme.primary,
+                                    )
+                                  : WidgetStateProperty.all(
+                                      Theme.of(context).colorScheme.tertiary,
+                                    ),
+                            ),
                             onPressed: () {
                               _isRunning ? _resetTimer() : _startTimer(context);
                             },
                             child: Text(
-                              _isRunning ? "Stop" : "Start",
+                              _isRunning ? "Give up" : "Start",
                               style: const TextStyle(
-                                fontSize: 20,
-                                color: Colors.white,
+                                fontSize: 16,
+                                color: Colors.black,
                               ),
                             ),
                           ),

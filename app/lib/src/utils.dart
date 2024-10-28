@@ -19,6 +19,21 @@ String formatSeconds(int seconds) {
   return hours > 0 ? '$hours:$minutes:$seconds' : '$minutes:$seconds';
 }
 
+int parseSeconds(String secondsInput) {
+  var parts = secondsInput.split(':');
+  if (parts.length == 2) {
+    var minutes = int.parse(parts[0]);
+    var seconds = int.parse(parts[1]);
+    return minutes * 60 + seconds;
+  } else if (parts.length == 3) {
+    var hours = int.parse(parts[0]);
+    var minutes = int.parse(parts[1]);
+    var seconds = int.parse(parts[2]);
+    return hours * 3600 + minutes * 60 + seconds;
+  }
+  return 0;
+}
+
 void showNotAvailable(BuildContext context) {
   ScaffoldMessenger.of(context).showSnackBar(
     const SnackBar(content: Text("Feature not available yet")),

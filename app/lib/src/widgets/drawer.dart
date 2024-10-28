@@ -6,7 +6,7 @@ class DrawerWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      backgroundColor: Colors.black87,
+      backgroundColor: Theme.of(context).colorScheme.surfaceBright,
       child: Column(
         children: [
           const DrawerHeader(

@@ -213,6 +213,7 @@ async fn get_sessions(pool: web::Data<PgPool>, user_id: web::Path<Uuid>) -> impl
 
 // TODO:
 /// Get all users ranked by their focus points
+//
 // async fn get_users(pool: web::Data<PgPool>) -> impl Responder {
 // let rows = sqlx::query!(
 //     "SELECT user_id, name, email, total_time, created_at, updated_at

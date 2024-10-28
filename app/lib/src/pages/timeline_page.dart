@@ -44,11 +44,15 @@ class _TimelinePageState extends State<TimelinePage> {
         builder: (context, globalStates, child) => Scaffold(
             appBar: const AppBarWidget(),
             drawer: const DrawerWidget(),
-            backgroundColor: Colors.deepPurple,
+            backgroundColor: Theme.of(context).colorScheme.surface,
             body: ListView.builder(
               itemCount: globalStates.sessionsState.length,
               itemBuilder: (context, index) {
-                return _sessionCard(globalStates.sessionsState[index]);
+                // Access elements from the end of the list by reversing the index
+                //TODO: ensure the accuracy of this.. it should sort by the time not just day
+                final reversedIndex =
+                    globalStates.sessionsState.length - 1 - index;
+                return _sessionCard(globalStates.sessionsState[reversedIndex]);
               },
             )));
   }
@@ -58,6 +62,7 @@ class _TimelinePageState extends State<TimelinePage> {
       return const SizedBox();
     }
     return Card(
+      color: Theme.of(context).colorScheme.secondaryContainer,
       child: Padding(
         padding: const EdgeInsets.all(10),
         child: Column(
@@ -66,7 +71,6 @@ class _TimelinePageState extends State<TimelinePage> {
               formatSeconds(session.duration),
               style: const TextStyle(
                 fontSize: 24,
-                color: Colors.black,
               ),
             ),
             const SizedBox(height: 10),
@@ -77,7 +81,6 @@ class _TimelinePageState extends State<TimelinePage> {
                   session.startedAt.substring(11, 16),
                   style: const TextStyle(
                     fontSize: 15,
-                    color: Colors.black,
                   ),
                 ),
                 const SizedBox(width: 5),
@@ -85,7 +88,6 @@ class _TimelinePageState extends State<TimelinePage> {
                   'to',
                   style: TextStyle(
                     fontSize: 15,
-                    color: Colors.black,
                   ),
                 ),
                 const SizedBox(width: 5),
@@ -94,7 +96,6 @@ class _TimelinePageState extends State<TimelinePage> {
                     session.endedAt!.substring(11, 16),
                     style: const TextStyle(
                       fontSize: 15,
-                      color: Colors.black,
                     ),
                   ),
               ],
@@ -104,7 +105,6 @@ class _TimelinePageState extends State<TimelinePage> {
                 session.startedAt.substring(0, 10),
                 style: const TextStyle(
                   fontSize: 15,
-                  color: Colors.black,
                 ),
               ),
               if (session.endedAt!.substring(0, 10) !=
@@ -115,7 +115,6 @@ class _TimelinePageState extends State<TimelinePage> {
                     'to',
                     style: TextStyle(
                       fontSize: 15,
-                      color: Colors.black,
                     ),
                   ),
                   const SizedBox(width: 5),
@@ -123,7 +122,6 @@ class _TimelinePageState extends State<TimelinePage> {
                     session.endedAt!.substring(0, 10),
                     style: const TextStyle(
                       fontSize: 15,
-                      color: Colors.black,
                     ),
                   ),
                 ])

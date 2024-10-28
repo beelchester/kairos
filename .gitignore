@@ -147,3 +147,8 @@ target/
 
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
+# Ignore all Firebase configuration files
+**/google-services.json
+**/GoogleService-Info.plist
+**/firebase.json
+**/firebase_options.dart
