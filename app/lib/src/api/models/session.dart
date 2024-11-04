@@ -1,6 +1,7 @@
 class Session {
   final String sessionId;
   final String userId;
+  final String projectId;
   final String startedAt;
   String? endedAt;
   int duration;
@@ -8,6 +9,7 @@ class Session {
   Session({
     required this.sessionId,
     required this.userId,
+    required this.projectId,
     required this.startedAt,
     this.endedAt,
     required this.duration,
@@ -17,6 +19,7 @@ class Session {
     return Session(
       sessionId: json['sessionId'],
       userId: json['userId'],
+      projectId: json['projectId'],
       startedAt: json['startedAt'],
       endedAt: json['endedAt'],
       duration: json['duration'],
@@ -27,6 +30,7 @@ class Session {
     return {
       'sessionId': sessionId,
       'userId': userId,
+      'projectId': projectId,
       'startedAt': startedAt,
       'endedAt': endedAt,
       'duration': duration,

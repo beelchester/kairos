@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:kairos/src/api/api_service.dart';
+import 'package:kairos/src/api/models/project.dart';
+import 'package:kairos/src/global_states.dart';
+import 'package:kairos/src/shared_prefs.dart';
+import 'package:provider/provider.dart';
 
 DateTime currentTime() {
   return DateTime.now().toUtc();
@@ -62,4 +67,34 @@ void showOnlineSnackBar(BuildContext context) {
       backgroundColor: Colors.green,
     ),
   );
+}
+
+Future<void> loadProjects(BuildContext context, String userId) async {
+  var globalStates = Provider.of<GlobalStates>(context, listen: false);
+  try {
+    var projects = await ApiService.getProjects(userId);
+    globalStates.setProjectsState = projects;
+  } catch (e) {
+    throw Exception(e.toString());
+  }
+}
+
+Project getProject(BuildContext context, String projectId) {
+  var globalStates = Provider.of<GlobalStates>(context, listen: false);
+  var project = globalStates.projectsState
+      .firstWhere((project) => project.projectId == projectId);
+  return project;
+}
+
+Future<void> loadSessions(BuildContext context, String userId) async {
+  var globalStates = Provider.of<GlobalStates>(context, listen: false);
+  try {
+    var sessions = await ApiService.getSessions(userId);
+    globalStates.setSessionsState = sessions;
+  } catch (e) {
+    var offlineSessions = await SharedPrefs().getOfflineSessions();
+    if (offlineSessions != null) {
+      globalStates.setSessionsState = offlineSessions;
+    }
+  }
 }

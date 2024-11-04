@@ -1,12 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:kairos/src/api/api_service.dart';
 import 'package:kairos/src/api/google_sign_in_service.dart';
 import 'package:kairos/src/api/models/project.dart';
 import 'package:kairos/src/global_states.dart';
 import 'package:kairos/src/widgets/appbar.dart';
 import 'package:kairos/src/widgets/drawer.dart';
 import 'package:provider/provider.dart';
+import 'package:kairos/src/utils.dart';
 
 class ProjectPage extends StatefulWidget {
   const ProjectPage({super.key});
@@ -27,17 +27,7 @@ class _ProjectPageState extends State<ProjectPage> {
       // logout
       GoogleSignInService().logout();
     }
-    _loadProjects(context);
-  }
-
-  Future<void> _loadProjects(BuildContext context) async {
-    var globalStates = Provider.of<GlobalStates>(context, listen: false);
-    try {
-      var projects = await ApiService.getProjects(_userId);
-      globalStates.setProjectsState = projects;
-    } catch (e) {
-      throw Exception(e.toString());
-    }
+    loadProjects(context, _userId);
   }
 
   @override

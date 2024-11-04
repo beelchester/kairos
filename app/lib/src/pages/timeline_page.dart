@@ -19,7 +19,6 @@ class TimelinePage extends StatefulWidget {
 }
 
 class _TimelinePageState extends State<TimelinePage> {
-  final _sharedPrefs = SharedPrefs();
   final FirebaseAuth _firebaseInstance = FirebaseAuth.instance;
   late String _userId;
   @override
@@ -31,20 +30,8 @@ class _TimelinePageState extends State<TimelinePage> {
       // logout
       GoogleSignInService().logout();
     }
-    _loadSessions(context);
-  }
-
-  Future<void> _loadSessions(BuildContext context) async {
-    var globalStates = Provider.of<GlobalStates>(context, listen: false);
-    try {
-      var sessions = await ApiService.getSessions(_userId);
-      globalStates.setSessionsState = sessions;
-    } catch (e) {
-      var offlineSessions = await _sharedPrefs.getOfflineSessions();
-      if (offlineSessions != null) {
-        globalStates.setSessionsState = offlineSessions;
-      }
-    }
+    loadProjects(context, _userId);
+    loadSessions(context, _userId);
   }
 
   @override
@@ -135,6 +122,29 @@ class _TimelinePageState extends State<TimelinePage> {
                   ),
                 ])
             ]),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  height: 10,
+                  width: 10,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(50),
+                      color: Colors.grey),
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                Text(
+                  getProject(context, session.projectId).projectName,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            )
           ],
         ),
       ),

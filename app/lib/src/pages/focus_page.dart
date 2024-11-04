@@ -369,6 +369,7 @@ class _FocusPageState extends State<FocusPage> {
       var session = Session(
           sessionId: _sessionId,
           userId: _userId,
+          projectId: _project.projectId,
           startedAt: _startTime.toString(),
           endedAt: _endTime.toString(),
           duration: duration);
@@ -418,6 +419,7 @@ class _FocusPageState extends State<FocusPage> {
     var session = Session(
         sessionId: _sessionId,
         userId: _userId,
+        projectId: _project.projectId,
         startedAt: _startTime.toString(),
         duration: 0);
     try {
