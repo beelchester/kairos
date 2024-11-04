@@ -16,6 +16,10 @@ class ApiService {
       body: jsonEncode(user.toJson()),
     );
 
+    if (response.statusCode == 409) {
+      throw Exception('User already exists');
+    }
+
     if (response.statusCode != 200) {
       throw Exception('Failed to add user');
     }

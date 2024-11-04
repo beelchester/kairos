@@ -8,6 +8,7 @@ class AuthPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    //TODO: Also check shared prefs logged in value
     return Scaffold(
         body: StreamBuilder(
             stream: FirebaseAuth.instance.authStateChanges(),

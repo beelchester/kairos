@@ -41,58 +41,58 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _settingsList(GlobalStates globalState) {
     return ListView(padding: const EdgeInsets.all(8), children: [
-      Container(
-        height: 50,
-        color: Colors.black45,
-        child: Center(
-            child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            const Text(
-              'Max Session Duration',
-              style: TextStyle(color: Colors.white),
-            ),
-            const SizedBox(width: 10),
-            Theme(
-                data: Theme.of(context).copyWith(
-                  canvasColor: Theme.of(context).colorScheme.surfaceBright,
-                ),
-                child: DropdownButton<int>(
-                  value: _maxSessionDuration,
-                  onChanged: (int? newValue) {
-                    if (newValue != null) {
-                      setState(() {
-                        _maxSessionDuration = newValue;
-                      });
-                      _sharedPrefs.setMaxSessionDuration(newValue);
-                    }
-                  },
-                  items: const [
-                    DropdownMenuItem(
-                        value: 1,
-                        child: Text(
-                          '1 hour',
-                          style: TextStyle(color: Colors.white),
-                        )),
-                    DropdownMenuItem(
-                        value: 2,
-                        child: Text(
-                          '2 hours',
-                          style: TextStyle(color: Colors.white),
-                        )),
-                    DropdownMenuItem(
-                        value: 3,
-                        child: Text(
-                          '3 hours',
-                          style: TextStyle(color: Colors.white),
-                        ))
-                  ],
-                )),
-          ],
-        )),
-      ),
-      //logout button
-      const SizedBox(height: 10),
+      // Container(
+      //   height: 50,
+      //   color: Colors.black45,
+      //   child: Center(
+      //       child: Row(
+      //     mainAxisAlignment: MainAxisAlignment.spaceAround,
+      //     children: [
+      //       const Text(
+      //         'Max Session Duration',
+      //         style: TextStyle(color: Colors.white),
+      //       ),
+      //       const SizedBox(width: 10),
+      //       Theme(
+      //           data: Theme.of(context).copyWith(
+      //             canvasColor: Theme.of(context).colorScheme.surfaceBright,
+      //           ),
+      //           child: DropdownButton<int>(
+      //             value: _maxSessionDuration,
+      //             onChanged: (int? newValue) {
+      //               if (newValue != null) {
+      //                 setState(() {
+      //                   _maxSessionDuration = newValue;
+      //                 });
+      //                 _sharedPrefs.setMaxSessionDuration(newValue);
+      //               }
+      //             },
+      //             items: const [
+      //               DropdownMenuItem(
+      //                   value: 1,
+      //                   child: Text(
+      //                     '1 hour',
+      //                     style: TextStyle(color: Colors.white),
+      //                   )),
+      //               DropdownMenuItem(
+      //                   value: 2,
+      //                   child: Text(
+      //                     '2 hours',
+      //                     style: TextStyle(color: Colors.white),
+      //                   )),
+      //               DropdownMenuItem(
+      //                   value: 3,
+      //                   child: Text(
+      //                     '3 hours',
+      //                     style: TextStyle(color: Colors.white),
+      //                   ))
+      //             ],
+      //           )),
+      //     ],
+      //   )),
+      // ),
+      // //logout button
+      // const SizedBox(height: 10),
       SizedBox(
         height: 50,
         child: Center(

@@ -5,6 +5,7 @@ import 'package:kairos/src/global_states.dart';
 import 'package:kairos/src/pages/auth_page.dart';
 import 'package:kairos/src/pages/focus_page.dart';
 import 'package:kairos/src/pages/settings_page.dart';
+import 'package:kairos/src/pages/stats_page.dart';
 import 'package:kairos/src/pages/timeline_page.dart';
 import 'package:kairos/src/theme/default_theme.dart';
 import 'package:provider/provider.dart';
@@ -26,7 +27,8 @@ class MyApp extends StatelessWidget {
         "/": (context) => const AuthPage(),
         "/focus": (context) => const FocusPage(),
         "/timeline": (context) => const TimelinePage(),
-        "/settings": (context) => const SettingsPage()
+        "/settings": (context) => const SettingsPage(),
+        "/stats": (context) => const StatsPage()
       },
       theme: defaultTheme,
     );

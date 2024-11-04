@@ -9,7 +9,17 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: Theme.of(context).colorScheme.surface,
       leading: const MenuButton(),
-      title: _focusModeHandler(context),
+      // if (ModalRoute.of(context)!.settings.name == '/focus') {
+      // title: _focusModeHandler(context),
+      title: ModalRoute.of(context)!.settings.name == '/focus'
+          ? _focusModeHandler(context)
+          : ModalRoute.of(context)!.settings.name == '/timeline'
+              ? const Text('Timeline')
+              : ModalRoute.of(context)!.settings.name == '/stats'
+                  ? const Text('Stats')
+                  : ModalRoute.of(context)!.settings.name == '/settings'
+                      ? const Text('Settings')
+                      : const SizedBox(),
       actions: [
         Container(
           decoration: BoxDecoration(
@@ -37,18 +47,15 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
 
   Widget _focusModeHandler(context) {
     // show this icon only when the current path is /focus
-    if (ModalRoute.of(context)!.settings.name == '/focus') {
-      return IconButton(
-        onPressed: () {},
-        icon: Icon(
-          Icons.timer_rounded,
-          // color: Theme.of(context).colorScheme.secondary,
-          color: Colors.grey[400],
-        ),
-      );
-    } else {
-      return const SizedBox();
-    }
+    return IconButton(
+      onPressed: () {},
+      icon: Icon(
+        Icons.timer_rounded, // for stopwatch
+        // Icons.sandtime // for timer
+        // color: Theme.of(context).colorScheme.secondary,
+        color: Colors.grey[400],
+      ),
+    );
   }
 
   @override

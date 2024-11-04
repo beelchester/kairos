@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:circular_countdown_timer/circular_countdown_timer.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:kairos/src/api/google_sign_in_service.dart';
 import 'package:kairos/src/api/models/session.dart';
 import 'package:kairos/src/global_states.dart';
 import 'package:kairos/src/widgets/appbar.dart';
@@ -19,7 +21,8 @@ class FocusPage extends StatefulWidget {
 }
 
 class _FocusPageState extends State<FocusPage> {
-  final int _duration = 10;
+  final _sharedPrefs = SharedPrefs();
+  int _duration = 3 * 3600;
   bool _isFocusMode = false;
   int _elapsedTime = 0;
   bool _isRunning = false;
@@ -27,9 +30,8 @@ class _FocusPageState extends State<FocusPage> {
   DateTime _endTime = currentTime();
   String _todaysFocus = formatSeconds(0);
   String _sessionId = const Uuid().v4();
-  // final String _userId = const Uuid().v4();
-  final String _userId = "00000000-0000-0000-0000-000000000000".toString();
-  final _sharedPrefs = SharedPrefs();
+  final FirebaseAuth _firebaseInstance = FirebaseAuth.instance;
+  late String _userId;
 
   final CountDownController _controller = CountDownController();
 
@@ -45,12 +47,27 @@ class _FocusPageState extends State<FocusPage> {
   @override
   void initState() {
     super.initState();
+    // TODO: Improve this
+    if (_firebaseInstance.currentUser != null) {
+      _userId = _firebaseInstance.currentUser!.uid;
+      print('user photo url: ${_firebaseInstance.currentUser!.photoURL}');
+    } else {
+      // logout
+      GoogleSignInService().logout();
+    }
+    _initMaxDuration();
     _checkTodaysFocus();
     _checkActiveSession(context);
     Timer.periodic(const Duration(seconds: 10), (timer) async {
       await _checkActiveSession(context);
       await _checkTodaysFocus();
     });
+  }
+
+  void _initMaxDuration() async {
+    _duration = await _sharedPrefs.getMaxSessionDuration() ??
+        3 * 3600; // 3 hours default
+    debugPrint("max duration is $_duration");
   }
 
   Future<void> _checkTodaysFocus() async {

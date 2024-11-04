@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:kairos/src/api/api_service.dart';
+import 'package:kairos/src/api/google_sign_in_service.dart';
 import 'package:kairos/src/api/models/session.dart';
 import 'package:kairos/src/global_states.dart';
 import 'package:kairos/src/utils.dart';
@@ -18,17 +20,24 @@ class TimelinePage extends StatefulWidget {
 
 class _TimelinePageState extends State<TimelinePage> {
   final _sharedPrefs = SharedPrefs();
+  final FirebaseAuth _firebaseInstance = FirebaseAuth.instance;
+  late String _userId;
   @override
   void initState() {
     super.initState();
+    if (_firebaseInstance.currentUser != null) {
+      _userId = _firebaseInstance.currentUser!.uid;
+    } else {
+      // logout
+      GoogleSignInService().logout();
+    }
     _loadSessions(context);
   }
 
   Future<void> _loadSessions(BuildContext context) async {
     var globalStates = Provider.of<GlobalStates>(context, listen: false);
     try {
-      var sessions =
-          await ApiService.getSessions('00000000-0000-0000-0000-000000000000');
+      var sessions = await ApiService.getSessions(_userId);
       globalStates.setSessionsState = sessions;
     } catch (e) {
       var offlineSessions = await _sharedPrefs.getOfflineSessions();

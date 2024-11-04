@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class DrawerWidget extends StatelessWidget {
+  static final User? _user = FirebaseAuth.instance.currentUser;
   const DrawerWidget({super.key});
 
   @override
@@ -9,9 +11,28 @@ class DrawerWidget extends StatelessWidget {
       backgroundColor: Theme.of(context).colorScheme.surfaceBright,
       child: Column(
         children: [
-          const DrawerHeader(
-            child: Text('Profile details'),
-          ),
+          DrawerHeader(
+              child: Column(
+            children: [
+              const SizedBox(height: 20),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8.0),
+                child: Image.network(
+                  _user?.photoURL ?? '',
+                  height: 60,
+                  width: 60,
+                ),
+              ),
+              const SizedBox(height: 15),
+              Text(
+                '${_user?.displayName}',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ],
+          )),
           const SizedBox(height: 30),
           ListTile(
             title: const Text('Home', style: TextStyle(color: Colors.white)),
@@ -19,9 +40,11 @@ class DrawerWidget extends StatelessWidget {
               Navigator.pushNamed(context, '/focus');
             },
           ),
-          const ListTile(
-            // grey out the option
-            title: Text('Stats', style: TextStyle(color: Colors.grey)),
+          ListTile(
+            title: const Text('Stats', style: TextStyle(color: Colors.white)),
+            onTap: () {
+              Navigator.pushNamed(context, '/stats');
+            },
           ),
           ListTile(
             title:
@@ -36,7 +59,7 @@ class DrawerWidget extends StatelessWidget {
           ),
           const ListTile(
             // grey out the option
-            title: Text('Tags', style: TextStyle(color: Colors.grey)),
+            title: Text('Projects', style: TextStyle(color: Colors.grey)),
           ),
           const ListTile(
             // grey out the option
