@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -57,14 +59,19 @@ class DrawerWidget extends StatelessWidget {
             // grey out the option
             title: Text('Leaderboard', style: TextStyle(color: Colors.grey)),
           ),
-          const ListTile(
+          ListTile(
             // grey out the option
-            title: Text('Projects', style: TextStyle(color: Colors.grey)),
+            title:
+                const Text('Projects', style: TextStyle(color: Colors.white)),
+            onTap: () {
+              Navigator.pushNamed(context, '/projects');
+            },
           ),
-          const ListTile(
-            // grey out the option
-            title: Text('Block Apps', style: TextStyle(color: Colors.grey)),
-          ),
+          if (Platform.isIOS || Platform.isAndroid)
+            const ListTile(
+              // grey out the option
+              title: Text('Block Apps', style: TextStyle(color: Colors.grey)),
+            ),
           ListTile(
             // grey out the option
             title:

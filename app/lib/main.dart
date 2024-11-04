@@ -4,6 +4,7 @@ import 'package:kairos/firebase_options.dart';
 import 'package:kairos/src/global_states.dart';
 import 'package:kairos/src/pages/auth_page.dart';
 import 'package:kairos/src/pages/focus_page.dart';
+import 'package:kairos/src/pages/projects_page.dart';
 import 'package:kairos/src/pages/settings_page.dart';
 import 'package:kairos/src/pages/stats_page.dart';
 import 'package:kairos/src/pages/timeline_page.dart';
@@ -27,6 +28,7 @@ class MyApp extends StatelessWidget {
         "/": (context) => const AuthPage(),
         "/focus": (context) => const FocusPage(),
         "/timeline": (context) => const TimelinePage(),
+        "/projects": (context) => const ProjectPage(),
         "/settings": (context) => const SettingsPage(),
         "/stats": (context) => const StatsPage()
       },

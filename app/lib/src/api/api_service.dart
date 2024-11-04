@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:kairos/src/api/models/project.dart';
 import 'package:kairos/src/utils.dart';
 import 'models/user.dart';
 import 'models/session.dart';
@@ -76,6 +77,60 @@ class ApiService {
       return [];
     } else {
       throw Exception('Failed to load sessions');
+    }
+  }
+
+  static Future<List<Project>> getProjects(String userId) async {
+    final url = Uri.parse('$baseUrl/get_projects/$userId');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      return (jsonDecode(response.body) as List<dynamic>)
+          .map((e) => Project.fromJson(e))
+          .toList();
+    } else if (response.statusCode == 404) {
+      return [];
+    } else {
+      throw Exception('Failed to load projects');
+    }
+  }
+
+  static Future<void> addProject(String userId, Project project) async {
+    final url = Uri.parse('$baseUrl/add_project');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(project.toJson()),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to add project');
+    }
+  }
+
+  static Future<void> updateProject(String userId, Project project) async {
+    final url = Uri.parse('$baseUrl/update_project');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(project.toJson()),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update project');
+    }
+  }
+
+  static Future<void> deleteProject(String userId, Project project) async {
+    final url = Uri.parse('$baseUrl/delete_project');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(project.toJson()),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete project');
     }
   }
 

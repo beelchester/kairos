@@ -3,6 +3,7 @@ import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:kairos/src/api/google_sign_in_service.dart';
+import 'package:kairos/src/api/models/project.dart';
 import 'package:kairos/src/api/models/session.dart';
 import 'package:kairos/src/global_states.dart';
 import 'package:kairos/src/widgets/appbar.dart';
@@ -32,6 +33,7 @@ class _FocusPageState extends State<FocusPage> {
   String _sessionId = const Uuid().v4();
   final FirebaseAuth _firebaseInstance = FirebaseAuth.instance;
   late String _userId;
+  late Project _project;
 
   final CountDownController _controller = CountDownController();
 
@@ -50,18 +52,37 @@ class _FocusPageState extends State<FocusPage> {
     // TODO: Improve this
     if (_firebaseInstance.currentUser != null) {
       _userId = _firebaseInstance.currentUser!.uid;
-      print('user photo url: ${_firebaseInstance.currentUser!.photoURL}');
     } else {
       // logout
       GoogleSignInService().logout();
     }
     _initMaxDuration();
+    _initCurrentProject();
     _checkTodaysFocus();
     _checkActiveSession(context);
     Timer.periodic(const Duration(seconds: 10), (timer) async {
       await _checkActiveSession(context);
       await _checkTodaysFocus();
     });
+  }
+
+  void _initCurrentProject() async {
+    var project = await _sharedPrefs.getProject();
+    if (project != null) {
+      setState(() {
+        _project = project;
+      });
+    } else {
+      var projects = await ApiService.getProjects(_userId);
+      if (projects.isNotEmpty) {
+        var defaultProject =
+            projects.firstWhere((element) => element.projectName == "Unset");
+        setState(() {
+          _project = defaultProject;
+        });
+        await _sharedPrefs.setProject(_project);
+      }
+    }
   }
 
   void _initMaxDuration() async {
@@ -549,16 +570,59 @@ class _FocusPageState extends State<FocusPage> {
                               debugPrint('Countdown Changed $_elapsedTime');
                             },
                           ),
-                          // Text(
-                          //   formatTime(_elapsedTime),
-                          //   style: const TextStyle(
-                          //     fontSize: 50,
-                          //     color: Colors.white,
-                          //   ),
-                          // ),
-                          const SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: () {},
+                            style: ButtonStyle(
+                              backgroundColor: WidgetStateProperty.all(
+                                Theme.of(context)
+                                    .colorScheme
+                                    .secondaryContainer,
+                              ),
+                              padding: WidgetStateProperty.all(
+                                const EdgeInsets.only(
+                                  top: 10,
+                                  bottom: 10,
+                                  left: 18,
+                                  right: 18,
+                                ),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  height: 10,
+                                  width: 10,
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(50),
+                                      color: Colors.grey),
+                                ),
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                Text(
+                                  _project.projectName,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
                           ElevatedButton(
                             style: ButtonStyle(
+                              padding: WidgetStateProperty.all(
+                                const EdgeInsets.only(
+                                  top: 10,
+                                  bottom: 10,
+                                  left: 50,
+                                  right: 50,
+                                ),
+                              ),
                               backgroundColor: !_isRunning
                                   ? WidgetStateProperty.all(
                                       Theme.of(context).colorScheme.primary,

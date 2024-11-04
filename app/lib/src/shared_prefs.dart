@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:kairos/src/api/models/project.dart';
 import 'package:kairos/src/api/models/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -71,6 +72,23 @@ class SharedPrefs {
       return (jsonDecode(sessionsString) as List<dynamic>)
           .map((e) => Session.fromJson(e))
           .toList();
+    }
+    return null;
+  }
+
+  Future<void> setProject(Project? project) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (project != null) {
+      var projectString = jsonEncode(project);
+      await prefs.setString('project', projectString);
+    }
+  }
+
+  Future<Project?> getProject() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var projectString = prefs.getString('project');
+    if (projectString != null) {
+      return Project.fromJson(jsonDecode(projectString));
     }
     return null;
   }

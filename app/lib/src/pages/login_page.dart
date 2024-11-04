@@ -63,8 +63,7 @@ class _LoginPageState extends State<LoginPage> {
       if (e.toString().contains("User already exists")) {
         debugPrint("user already exists");
       } else {
-        print(e);
-        throw e;
+        throw Exception(e.toString());
       }
     }
     SharedPrefs().setLoggedIn(true);

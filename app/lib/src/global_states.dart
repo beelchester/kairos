@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kairos/src/api/models/project.dart';
 import 'package:kairos/src/api/models/session.dart';
 
 class GlobalStates extends ChangeNotifier {
@@ -32,6 +33,14 @@ class GlobalStates extends ChangeNotifier {
 
   set setSessionsState(List<Session> value) {
     sessions = value;
+    notifyListeners();
+  }
+
+  List<Project> projects = [];
+  List<Project> get projectsState => projects;
+
+  set setProjectsState(List<Project> value) {
+    projects = value;
     notifyListeners();
   }
 }

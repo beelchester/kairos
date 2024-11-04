@@ -19,7 +19,9 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
                   ? const Text('Stats')
                   : ModalRoute.of(context)!.settings.name == '/settings'
                       ? const Text('Settings')
-                      : const SizedBox(),
+                      : ModalRoute.of(context)!.settings.name == '/projects'
+                          ? const Text('Projects')
+                          : const SizedBox(),
       actions: [
         Container(
           decoration: BoxDecoration(
