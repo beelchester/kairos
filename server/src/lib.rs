@@ -284,14 +284,14 @@ async fn add_session(pool: web::Data<PgPool>, json: web::Json<Session>) -> impl 
     }
 }
 
-/// End the session
+/// Update the session
 /// Or also to change the duration of the session (start/end) after the session was ended
 /// but the changes after the session was ended will not update the user's focus points and total
 /// focus time, it will only be reflected in the personal user stats section.
 /// Max duration for any running session is set by the user.. by default 4 hours, can be set upto 6
 /// hours
 /// Max duration to update any past session is 4 hours
-async fn end_session(pool: web::Data<PgPool>, json: web::Json<Session>) -> impl Responder {
+async fn update_session(pool: web::Data<PgPool>, json: web::Json<Session>) -> impl Responder {
     let session = json.into_inner();
     let result = sqlx::query!(
         "UPDATE sessions SET ended_at = $1, duration = $2
@@ -473,7 +473,7 @@ pub async fn run(listener: TcpListener) -> Result<(), std::io::Error> {
             .route("/delete_project", web::delete().to(delete_project))
             .route("/get_projects/{user_id}", web::get().to(get_projects))
             .route("/add_session", web::post().to(add_session))
-            .route("/end_session", web::post().to(end_session))
+            .route("/update_session", web::post().to(update_session))
             .route(
                 "/check_active_session/{user_id}",
                 web::get().to(check_active_session),
