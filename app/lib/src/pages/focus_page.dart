@@ -13,6 +13,7 @@ import 'package:kairos/src/shared_prefs.dart';
 import 'package:kairos/src/widgets/drawer.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 class FocusPage extends StatefulWidget {
   const FocusPage({super.key});
@@ -33,6 +34,7 @@ class _FocusPageState extends State<FocusPage> {
   String _sessionId = const Uuid().v4();
   final FirebaseAuth _firebaseInstance = FirebaseAuth.instance;
   late String _userId;
+  //TODO: fix late initialization of project error
   late Project _project;
 
   final CountDownController _controller = CountDownController();
@@ -58,6 +60,7 @@ class _FocusPageState extends State<FocusPage> {
     }
     _initMaxDuration();
     _initCurrentProject();
+    loadProjects(context, _userId);
     _checkTodaysFocus();
     _checkActiveSession(context);
     Timer.periodic(const Duration(seconds: 10), (timer) async {
@@ -459,6 +462,13 @@ class _FocusPageState extends State<FocusPage> {
     //   });
   }
 
+  void _modalTap(String projectId, BuildContext bottomSheetContext) {
+    Navigator.of(bottomSheetContext).pop();
+    setState(() {
+      _project = getProject(context, projectId);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<GlobalStates>(
@@ -577,7 +587,79 @@ class _FocusPageState extends State<FocusPage> {
                             },
                           ),
                           ElevatedButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              WoltModalSheet.show(
+                                context: context,
+                                pageListBuilder: (bottomSheetContext) => [
+                                  SliverWoltModalSheetPage(
+                                    mainContentSliversBuilder: (context) => [
+                                      SliverList.builder(
+                                        itemBuilder: (context, index) {
+                                          final reversedIndex = globalStates
+                                                  .projectsState.length -
+                                              1 -
+                                              index;
+                                          var project = globalStates
+                                              .projectsState[reversedIndex];
+                                          return ListTile(
+                                              title: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Container(
+                                                    height: 10,
+                                                    width: 10,
+                                                    decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(50),
+                                                        color: Colors.grey),
+                                                  ),
+                                                  const SizedBox(
+                                                    width: 10,
+                                                  ),
+                                                  Text(
+                                                    project.projectName,
+                                                    style: const TextStyle(
+                                                      fontSize: 18,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              onTap: () {
+                                                _modalTap(project.projectId,
+                                                    bottomSheetContext);
+                                              });
+                                        },
+                                        itemCount:
+                                            globalStates.projectsState.length,
+                                      ),
+                                    ],
+                                    stickyActionBar: ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.pushNamed(
+                                            context, '/projects');
+                                      },
+                                      child: const Text('Manage Projects',
+                                          style:
+                                              TextStyle(color: Colors.black)),
+                                      style: ButtonStyle(
+                                        backgroundColor:
+                                            WidgetStateProperty.all(
+                                                Theme.of(context)
+                                                    .colorScheme
+                                                    .primary),
+                                      ),
+                                    ),
+                                    // topBarTitle: const Text('Choose Project'),
+                                    // isTopBarLayerAlwaysVisible: true,
+                                    //TODO: remove this and add space at the bottom of list if the last is small
+                                    forceMaxHeight: true,
+                                  )
+                                ],
+                              );
+                            },
                             style: ButtonStyle(
                               backgroundColor: WidgetStateProperty.all(
                                 Theme.of(context)
