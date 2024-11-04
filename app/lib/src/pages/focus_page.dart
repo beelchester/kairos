@@ -86,8 +86,12 @@ class _FocusPageState extends State<FocusPage> {
   }
 
   void _initMaxDuration() async {
-    _duration = await _sharedPrefs.getMaxSessionDuration() ??
-        3 * 3600; // 3 hours default
+    var maxSessionDuration = await _sharedPrefs.getMaxSessionDuration();
+    if (maxSessionDuration != null) {
+      _duration = maxSessionDuration * 3600;
+    } else {
+      _duration = 3 * 3600; // 3 hours default
+    }
     debugPrint("max duration is $_duration");
   }
 
@@ -618,11 +622,11 @@ class _FocusPageState extends State<FocusPage> {
                           ElevatedButton(
                             style: ButtonStyle(
                               padding: WidgetStateProperty.all(
-                                const EdgeInsets.only(
+                                EdgeInsets.only(
                                   top: 10,
                                   bottom: 10,
-                                  left: 50,
-                                  right: 50,
+                                  left: _isRunning ? 40 : 50,
+                                  right: _isRunning ? 40 : 50,
                                 ),
                               ),
                               backgroundColor: !_isRunning

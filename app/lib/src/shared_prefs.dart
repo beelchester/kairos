@@ -36,7 +36,7 @@ class SharedPrefs {
     } else {
       // Default max session duration is 3 hours
       await prefs.setInt('maxSessionDuration', 3);
-      return 2;
+      return 3;
     }
   }
 
