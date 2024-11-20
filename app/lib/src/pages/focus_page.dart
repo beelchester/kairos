@@ -70,7 +70,7 @@ class _FocusPageState extends State<FocusPage> {
   }
 
   void _initCurrentProject() async {
-    var project = await _sharedPrefs.getProject();
+    var project = await _sharedPrefs.getCurrentProject();
     if (project != null) {
       setState(() {
         _project = project;

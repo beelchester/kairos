@@ -89,7 +89,7 @@ class SharedPrefs {
     }
   }
 
-  Future<Project?> getProject() async {
+  Future<Project?> getCurrentProject() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var projectString = prefs.getString('project');
     if (projectString != null) {

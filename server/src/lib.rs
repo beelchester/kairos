@@ -125,7 +125,7 @@ async fn add_user(pool: web::Data<PgPool>, json: web::Json<User>) -> impl Respon
         None,
     );
 
-    let project_result = sqlx::query!(
+    let add_project = sqlx::query!(
         "INSERT INTO projects (project_id, user_id, project_name, colour, deadline)
          VALUES ($1, $2, $3, $4, $5)",
         default_project.project_id,
@@ -133,12 +133,10 @@ async fn add_user(pool: web::Data<PgPool>, json: web::Json<User>) -> impl Respon
         default_project.project_name,
         default_project.colour,
         default_project.deadline,
-    )
-    .execute(&**pool)
-    .await;
+    );
 
     match result {
-        Ok(_) => match project_result {
+        Ok(_) => match add_project.execute(&**pool).await {
             Ok(_) => HttpResponse::Ok().finish(),
             Err(_) => HttpResponse::InternalServerError().finish(),
         },
@@ -146,20 +144,7 @@ async fn add_user(pool: web::Data<PgPool>, json: web::Json<User>) -> impl Respon
         Err(e) => match e {
             sqlx::Error::Database(err) => {
                 if err.code() == Some(UNIQUE_VIOLATION.into()) {
-                    // ensure the default project is created
-                    match project_result {
-                        Ok(_) => HttpResponse::Conflict().finish(),
-                        Err(e) => match e {
-                            sqlx::Error::Database(err) => {
-                                if err.code() == Some(UNIQUE_VIOLATION.into()) {
-                                    HttpResponse::Conflict().finish()
-                                } else {
-                                    HttpResponse::InternalServerError().finish()
-                                }
-                            }
-                            _ => HttpResponse::InternalServerError().finish(),
-                        },
-                    }
+                    HttpResponse::Conflict().finish()
                 } else {
                     HttpResponse::InternalServerError().finish()
                 }
