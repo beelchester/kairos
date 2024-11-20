@@ -40,6 +40,7 @@ struct Project {
     project_name: String,
     colour: String,
     deadline: Option<DateTime<Utc>>,
+    priority: Option<i32>,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -64,6 +65,7 @@ impl Project {
         project_name: String,
         colour: String,
         deadline: Option<DateTime<Utc>>,
+        priority: Option<i32>,
     ) -> Self {
         Self {
             user_id,
@@ -71,6 +73,7 @@ impl Project {
             project_name,
             colour,
             deadline,
+            priority,
         }
     }
 }
@@ -118,6 +121,7 @@ async fn add_user(pool: web::Data<PgPool>, json: web::Json<User>) -> impl Respon
         Uuid::new_v4(),
         "Unset".to_string(),
         "grey".to_string(),
+        None,
         None,
     );
 
@@ -169,13 +173,14 @@ async fn add_user(pool: web::Data<PgPool>, json: web::Json<User>) -> impl Respon
 async fn add_project(pool: web::Data<PgPool>, json: web::Json<Project>) -> impl Responder {
     let project = json.into_inner();
     let result = sqlx::query!(
-        "INSERT INTO projects (project_id, user_id, project_name, colour, deadline)
-         VALUES ($1, $2, $3, $4, $5)",
+        "INSERT INTO projects (project_id, user_id, project_name, colour, deadline, priority)
+         VALUES ($1, $2, $3, $4, $5, $6)",
         project.project_id,
         project.user_id,
         project.project_name,
         project.colour,
         project.deadline,
+        project.priority,
     )
     .execute(&**pool)
     .await;
@@ -199,11 +204,12 @@ async fn add_project(pool: web::Data<PgPool>, json: web::Json<Project>) -> impl 
 async fn update_project(pool: web::Data<PgPool>, json: web::Json<Project>) -> impl Responder {
     let project = json.into_inner();
     let result = sqlx::query!(
-        "UPDATE projects SET project_name = $1, colour = $2, deadline = $3
-         WHERE user_id = $4 AND project_id = $5",
+        "UPDATE projects SET project_name = $1, colour = $2, deadline = $3, priority = $4
+         WHERE user_id = $5 AND project_id = $6",
         project.project_name,
         project.colour,
         project.deadline,
+        project.priority,
         project.user_id,
         project.project_id
     )
@@ -236,7 +242,7 @@ async fn delete_project(pool: web::Data<PgPool>, json: web::Json<Project>) -> im
 /// Get all user projects
 async fn get_projects(pool: web::Data<PgPool>, user_id: web::Path<String>) -> impl Responder {
     let rows = sqlx::query!(
-        "SELECT project_id, user_id, project_name, colour, deadline
+        "SELECT project_id, user_id, project_name, colour, deadline, priority
          FROM projects
          WHERE user_id = $1",
         user_id.into_inner()
@@ -254,6 +260,7 @@ async fn get_projects(pool: web::Data<PgPool>, user_id: web::Path<String>) -> im
                     project_name: row.project_name,
                     colour: row.colour,
                     deadline: row.deadline,
+                    priority: row.priority,
                 })
                 .collect();
             HttpResponse::Ok().json(projects)

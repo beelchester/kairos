@@ -7,6 +7,7 @@ import 'package:kairos/src/widgets/appbar.dart';
 import 'package:kairos/src/widgets/drawer.dart';
 import 'package:provider/provider.dart';
 import 'package:kairos/src/utils.dart';
+import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 class ProjectPage extends StatefulWidget {
   const ProjectPage({super.key});
@@ -84,11 +85,34 @@ class _ProjectPageState extends State<ProjectPage> {
     // if (project.projectName == "Unset") {
     //   return const SizedBox();
     // }
-    return Card(
-      color: Theme.of(context).colorScheme.secondaryContainer,
+    return ElevatedButton(
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.all(
+          Theme.of(context).colorScheme.secondaryContainer,
+        ),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      ),
+      onPressed: () {
+        //TODO: Add/Edit project modal
+        WoltModalSheet.show(
+            context: context,
+            pageListBuilder: (sheetContext) => [
+                  WoltModalSheetPage(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(sheetContext).pop();
+                      },
+                      child: Text(project.projectName),
+                    ),
+                  )
+                ]);
+      },
       child: Padding(
-        padding:
-            const EdgeInsets.only(top: 16, bottom: 16, left: 10, right: 10),
+        padding: const EdgeInsets.fromLTRB(10, 20, 10, 20),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -104,7 +128,8 @@ class _ProjectPageState extends State<ProjectPage> {
             Text(
               project.projectName,
               style: const TextStyle(
-                fontSize: 20,
+                fontSize: 18,
+                color: Colors.white,
               ),
             ),
           ],

@@ -4,6 +4,7 @@ class Project {
   final String projectName;
   final String colour;
   final String? deadline;
+  final String? priority;
 
   Project({
     required this.projectId,
@@ -11,6 +12,7 @@ class Project {
     required this.projectName,
     required this.colour,
     this.deadline,
+    this.priority,
   });
 
   factory Project.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class Project {
       projectName: json['projectName'],
       colour: json['colour'],
       deadline: json['deadline'],
+      priority: json['priority'],
     );
   }
 
@@ -30,6 +33,7 @@ class Project {
       'projectName': projectName,
       'colour': colour,
       'deadline': deadline,
+      'priority': priority,
     };
   }
 }

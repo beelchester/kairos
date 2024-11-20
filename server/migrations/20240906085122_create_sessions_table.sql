@@ -3,7 +3,8 @@ CREATE TABLE projects (
     user_id VARCHAR(255) NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
     project_name VARCHAR(255) NOT NULL,
     colour VARCHAR(50) NOT NULL,
-    deadline TIMESTAMP WITH TIME ZONE
+    deadline TIMESTAMP WITH TIME ZONE,
+    priority INTEGER
 );
 
 CREATE TABLE sessions (

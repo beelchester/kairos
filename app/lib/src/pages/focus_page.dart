@@ -356,7 +356,9 @@ class _FocusPageState extends State<FocusPage> {
             // remove the session that was successfully uploaded from the offline sessions
             offlineSessions.remove(session);
             await _sharedPrefs.setOfflineSessions(offlineSessions);
-          } catch (e) {}
+          } catch (e) {
+            throw Exception(e.toString());
+          }
         }
       }
     }
@@ -641,9 +643,6 @@ class _FocusPageState extends State<FocusPage> {
                                         Navigator.pushNamed(
                                             context, '/projects');
                                       },
-                                      child: const Text('Manage Projects',
-                                          style:
-                                              TextStyle(color: Colors.black)),
                                       style: ButtonStyle(
                                         backgroundColor:
                                             WidgetStateProperty.all(
@@ -651,6 +650,9 @@ class _FocusPageState extends State<FocusPage> {
                                                     .colorScheme
                                                     .primary),
                                       ),
+                                      child: const Text('Manage Projects',
+                                          style:
+                                              TextStyle(color: Colors.black)),
                                     ),
                                     // topBarTitle: const Text('Choose Project'),
                                     // isTopBarLayerAlwaysVisible: true,

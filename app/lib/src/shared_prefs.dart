@@ -10,6 +10,11 @@ class SharedPrefs {
 
   SharedPrefs._internal();
 
+  Future<void> clear() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+  }
+
   Future<void> setLoggedIn(bool loggedIn) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('loggedIn', loggedIn);

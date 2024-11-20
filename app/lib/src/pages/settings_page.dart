@@ -100,6 +100,9 @@ class _SettingsPageState extends State<SettingsPage> {
           onPressed: () {
             GoogleSignInService().logout();
             Navigator.of(context).pushReplacementNamed('/');
+            // sharedPrefs.clear();
+            var sharedPrefs = SharedPrefs();
+            sharedPrefs.clear();
           },
           style: ButtonStyle(
             backgroundColor: WidgetStateProperty.all(
